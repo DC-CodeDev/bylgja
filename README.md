@@ -1,129 +1,206 @@
-# bylgja
+# Bylgja
 
-`bylgja` es la librería de motion de la Yggdrasil Suite.
+Bylgja es una libreria de animacion en TypeScript para React, basada en springs fisicos y sin dependencias externas de motion. `bylgja` significa "ola" en nordico antiguo.
 
-Está pensada para reemplazar el sistema de animación basado en Framer Motion con una base propia en TypeScript puro, más bindings de React. La distribución está pensada para consumo directo vía git URL o tag, no como parte de un monorepo.
+Bylgja existe para cubrir animaciones de interfaz con una base pequena y verificable: integra una ecuacion de spring real en vez de aproximar el movimiento con `cubic-bezier`, no depende de Framer Motion ni de librerias similares, y conecta esa fisica con el ciclo de vida de React mediante efectos con limpieza explicita. El codigo esta preparado para `StrictMode`, evita dejar drivers activos despues del desmontaje y centraliza las animaciones de salida en `Presence`, donde React todavia puede posponer el unmount.
 
-## Instalación
+## Instalacion
 
-Instalación desde git:
+El paquete actual esta configurado para consumo por git URL o tag. `package.json` tiene `"private": true` y no declara una publicacion de npm registry.
 
 ```bash
 npm install git+https://github.com/<org>/bylgja.git#v0.1.0
 ```
 
-También puede consumirse por tag:
+Tambien puede instalarse desde otro tag o commit:
 
 ```bash
 npm install git+https://github.com/<org>/bylgja.git#<tag>
 ```
 
-## Estado actual
+La distribucion usa ESM y tipos generados en `dist/`. El script `prepare` ejecuta `npm run build` al instalar desde git con npm.
 
-Fase 1:
+## Inicio Rapido
 
-- Implementado y testeado:
-  - `src/core/spring-solver.ts`
-  - `src/core/raf-driver.ts`
-  - `src/tokens/springs.ts`
-  - `src/tokens/tweens.ts`
-  - validación de parámetros físicos y clamp de `deltaTime` en el driver
+### `useSpring`
 
-Fase 2:
+`useSpring` devuelve un `ref`. El hook escribe el progreso numerico en la custom property `--spring-progress` del elemento asociado.
 
-- Implementado y testeado:
-  - `src/react/useSpring.ts`
-  - `src/react/Presence.tsx`
-  - `src/variants/fade.ts` y `src/variants/fade.css`
-  - `src/variants/fadeScale.ts` y `src/variants/fadeScale.css`
-  - `src/variants/modalBackdrop.ts` y `src/variants/modalBackdrop.css`
-  - `src/variants/modalPanel.ts` y `src/variants/modalPanel.css`
-  - `src/variants/pressable.ts` y `src/variants/pressable.css`
-  - `src/variants/selectedHighlight.ts` y `src/variants/selectedHighlight.css`
-  - `src/a11y/reducedMotion.ts`
+```tsx
+import { useState } from "react";
+import { SPRING_GENTLE, useSpring } from "bylgja";
 
-## Roadmap original
+export function MovingDot() {
+  const [active, setActive] = useState(false);
+  const ref = useSpring<HTMLDivElement>(active ? 1 : 0, SPRING_GENTLE, 0);
 
-- Completo y testeado:
-  - core (`spring-solver`, `raf-driver`)
-  - React (`useSpring`, `Presence`)
-  - variants (`fade`, `fadeScale`, `modalBackdrop`, `modalPanel`, `pressable`, `selectedHighlight`)
-  - a11y (`reducedMotion`)
+  return (
+    <button type="button" onClick={() => setActive((value) => !value)}>
+      <span ref={ref} className="dot" />
+    </button>
+  );
+}
+```
 
-Las animaciones de salida se resuelven exclusivamente con el componente `Presence`. No hay hook público separado para exit animations: un hook por sí solo no puede posponer un desmontaje que ya decidió el componente padre.
+```css
+.dot {
+  display: block;
+  inline-size: 16px;
+  block-size: 16px;
+  border-radius: 999px;
+  background: currentColor;
+  transform: translateX(calc(var(--spring-progress, 0) * 160px));
+}
+```
 
-## Distribución
+### `Presence`
 
-`bylgja` usa build a `dist/` con JavaScript ESM y archivos `.d.ts`. Esta estrategia se eligió sobre exportar TypeScript fuente directamente porque el paquete se instala vía git URL o tag y debe poder resolverse desde apps consumidoras sin exigir configuración especial del bundler para transpilar dependencias.
+`Presence` mantiene renderizado un wrapper `div` mientras la animacion de salida llega a su target. El wrapper recibe la misma custom property `--spring-progress`.
 
-Antes de consumir un tag o commit desde otra app, el paquete debe tener generado `dist/`. El script `prepare` ejecuta el build al instalar desde git con npm, y también se puede correr manualmente:
+```tsx
+import { useState } from "react";
+import { Presence, SPRING_GENTLE } from "bylgja";
+
+export function Notice() {
+  const [show, setShow] = useState(true);
+
+  return (
+    <>
+      <button type="button" onClick={() => setShow((value) => !value)}>
+        Toggle
+      </button>
+
+      <Presence show={show} exitConfig={SPRING_GENTLE} className="notice">
+        Saved changes
+      </Presence>
+    </>
+  );
+}
+```
+
+```css
+.notice {
+  opacity: var(--spring-progress, 0);
+  transform: translateY(calc((1 - var(--spring-progress, 0)) * 8px));
+}
+```
+
+## Que Incluye
+
+| Pieza | Export principal | Que resuelve |
+| --- | --- | --- |
+| Core de fisica | `SpringSolver`, `createSpringSolver` | Integra un spring 1D con masa, rigidez, damping, timestep fijo y umbrales de settling. |
+| Driver RAF | `createRafSpringDriver` | Avanza el solver con `requestAnimationFrame`, clampa `deltaTime` y permite suscribirse a snapshots. |
+| React spring | `useSpring` | Conecta un spring a un elemento React escribiendo `--spring-progress`. |
+| Presence | `Presence` | Coordina entrada/salida y retrasa el unmount hasta que la animacion de salida termina. |
+| Fade | `useFade` | Fade con estrategia `presence` o tween CSS simple. |
+| Fade scale | `useFadeScale` | Opacidad y escala coordinadas con `Presence`. |
+| Modal backdrop | `useModalBackdrop` | Backdrop fijo con opacidad controlada por spring. |
+| Modal panel | `useModalPanel` | Panel con opacidad, desplazamiento y escala. |
+| Pressable | `usePressable` | Interaccion de presionado con handlers de mouse/pointer y spring. |
+| Selected highlight | `useSelectedHighlight` | Highlight de seleccion controlado por `selected`. |
+| Reduced motion | `getReducedMotionPreference`, `useReducedMotion` | Lectura de `prefers-reduced-motion` desde el navegador. |
+
+Los tokens incluidos son `SPRING_GENTLE`, `SPRING_SNAPPY` y `FADE_QUICK`.
+
+## Reduced Motion y Accesibilidad
+
+Bylgja respeta `prefers-reduced-motion`. Cuando esa preferencia esta activa, `useSpring` no acorta una duracion: salta directamente al `targetValue`, escribe el estado final en `--spring-progress` y agenda `onSettled` en una microtarea. `useReducedMotion` tambien esta disponible para leer la preferencia desde componentes React.
+
+## CSS de Variants
+
+Los hooks de variants devuelven clases y props, pero no inyectan CSS. Para que esas clases tengan efecto visual, el consumidor debe importar explicitamente los archivos CSS expuestos por subpath:
+
+```ts
+import "bylgja/variants/fade.css";
+import "bylgja/variants/fadeScale.css";
+import "bylgja/variants/modalBackdrop.css";
+import "bylgja/variants/modalPanel.css";
+import "bylgja/variants/pressable.css";
+import "bylgja/variants/selectedHighlight.css";
+```
+
+Esos subpaths estan declarados en `package.json` como `./variants/*.css` y apuntan a `src/variants/*.css`.
+
+## API Publica
+
+El entrypoint publico es `bylgja`:
+
+```ts
+import {
+  Presence,
+  SPRING_GENTLE,
+  SPRING_SNAPPY,
+  createRafSpringDriver,
+  createSpringSolver,
+  getReducedMotionPreference,
+  useFade,
+  useFadeScale,
+  useModalBackdrop,
+  useModalPanel,
+  usePressable,
+  useReducedMotion,
+  useSelectedHighlight,
+  useSpring,
+} from "bylgja";
+```
+
+Los tipos publicos exportados incluyen `SpringSolverConfig`, `SpringSnapshot`, `FadeBinding`, `FadeState`, `FadeStrategy`, `UseFadeOptions`, `FadeScaleBinding`, `UseFadeScaleOptions`, `ModalBackdropBinding`, `UseModalBackdropOptions`, `ModalPanelBinding`, `UseModalPanelOptions`, `PressableBinding`, `UsePressableOptions`, `SelectedHighlightBinding` y `UseSelectedHighlightOptions`.
+
+## Distribucion
+
+Bylgja compila `src/` a `dist/` con JavaScript ESM, sourcemaps y declaraciones `.d.ts`.
 
 ```bash
 npm run build
 ```
 
-Importación desde una app consumidora:
+Esta estrategia evita exigir que las apps consumidoras transpilen TypeScript desde dependencias instaladas por git. Antes de consumir un tag o commit desde otra app, ese estado del paquete debe poder generar `dist/`; con npm, `prepare` ejecuta el build durante la instalacion desde git.
 
-```ts
-import { Presence, useSpring } from "bylgja";
-```
+## Limitaciones Conocidas
 
-Los estilos de variants se importan como subpaths públicos del paquete:
+- `useSpring` evalua `prefers-reduced-motion` cuando crea el driver y cuando cambia `targetValue`. Si la preferencia del sistema cambia en medio de una animacion ya en curso sin cambio de target ni recreacion del driver, esa animacion actual no se interrumpe a mitad de trayecto; el nuevo valor aplica en la proxima recreacion o cambio de target.
+- La prueba de consistencia del timestep fijo en `spring-solver` usa deltas que son fracciones exactas en punto flotante. Verifica determinismo para esas secuencias concretas, no una garantia universal para cualquier combinacion arbitraria de deltas.
+- `useSpring` escribe una unica variable CSS fija por elemento: `--spring-progress`. No soporta multiples springs simultaneos sobre el mismo elemento con nombres de variable distintos.
+- `useReducedMotion` no acepta override manual. Lee automaticamente `prefers-reduced-motion` desde el sistema operativo o el navegador.
+- Los archivos CSS de cada variant deben importarse explicitamente para que las clases tengan efecto visual. Importar el hook TypeScript no aplica estilos por si solo.
+- Las animaciones de salida se resuelven con `Presence`. No hay un hook publico separado para exit animations, porque un hook por si solo no puede posponer un desmontaje que ya decidio el componente padre.
 
-```ts
-import "bylgja/variants/fade.css";
-import "bylgja/variants/pressable.css";
-```
-
-## Limitaciones conocidas
-
-- `useSpring` evalúa `prefers-reduced-motion` cuando crea el driver y cuando cambia `targetValue`. Si la preferencia del sistema cambia en medio de una animación ya en curso sin cambio de target ni recreación del driver, esa animación actual no se interrumpe a mitad de trayecto; el nuevo valor sí aplica en la próxima recreación o cambio de target.
-- La prueba de consistencia del timestep fijo en `spring-solver` usa deltas que son fracciones exactas en punto flotante. Verifica determinismo para esas secuencias concretas, no una garantía universal para cualquier combinación arbitraria de deltas.
-- `useSpring` escribe una única variable CSS fija por elemento: `--spring-progress`. No soporta múltiples springs simultáneos sobre el mismo elemento con nombres de variable distintos.
-- `useReducedMotion` no acepta override manual. Lee automáticamente `prefers-reduced-motion` desde el sistema operativo o el navegador.
-- Los archivos CSS de cada variant deben importarse explícitamente para que las clases tengan efecto visual. Importar el hook TypeScript no aplica estilos por sí solo.
-
-## Auditoría transversal
-
-Los hallazgos reales de la auditoría transversal inicial están resueltos:
-
-- El hook stub de exit animations fue eliminado de la API pública; las exit animations se resuelven con `Presence`.
-- El paquete expone un entrypoint real en `dist/` con JavaScript ESM y tipos `.d.ts`.
-- El core rechaza valores `NaN` e `Infinity` en los puntos de entrada numéricos públicos.
-- Los seis variants usan `springConfig` como nombre común para configurar `SpringSolverConfig`.
-- Los tipos públicos de opciones y bindings de variants se exportan desde `bylgja`.
-- La cobertura de variants incluye una matriz mínima común y hay un test de composición anidada con StrictMode.
-
-## Dependencias
-
-Auditoría de fase 1:
-
-- No se incluye `framer-motion`
-- No se incluyen otras dependencias de animación externa
-- `react` queda como `peerDependency`
-- `typescript` queda como `devDependency`
-- `vite` y `@vitejs/plugin-react` son `devDependencies` usadas solo para el demo visual local; no forman parte de la librería publicada.
-
-## Demo visual local
-
-El repo incluye una mini app Vite en `demo/` para probar las animaciones reales en navegador. El demo importa `bylgja` desde el punto de entrada público del paquete, así que también funciona como prueba de humo de la distribución local.
+## Desarrollo Local
 
 ```bash
+git clone <repo-url>
+cd bylgja
+npm install
+```
+
+Comandos principales:
+
+```bash
+npm run build
+npm run typecheck
+npm run test
 npm run demo:dev
-```
-
-Para generar el build estático del demo:
-
-```bash
 npm run demo:build
 ```
 
-Para probar reduced motion, activá `prefers-reduced-motion` desde DevTools o desde la configuración de accesibilidad del sistema operativo y volvé a interactuar con las secciones.
+El demo de Vite vive en `demo/` y usa el entrypoint publico `bylgja`, por lo que tambien funciona como prueba de humo de la distribucion local. Para probar reduced motion, activa `prefers-reduced-motion` desde DevTools o desde la configuracion de accesibilidad del sistema operativo y vuelve a interactuar con el demo.
 
-## Convenciones de Testing
+Convenciones de testing del proyecto:
 
-- Cada fase nueva debe incluir sus propios tests en la misma entrega.
-- Los tests deben verificar comportamiento observable real, no solo ausencia de errores.
-- Para lógica numérica o de estado, se prueban entradas, salidas y convergencia.
-- Para hooks de React, se probará ciclo de vida con una librería de testing de React.
-- Para variants con CSS, se verificará la clase, las custom properties y el comportamiento visible en DOM.
+- Los tests verifican comportamiento observable real, no solo ausencia de errores.
+- Para logica numerica o de estado, se prueban entradas, salidas y convergencia.
+- Para hooks de React, se prueba ciclo de vida con Testing Library y React.
+- Para variants con CSS, se verifica la clase, las custom properties y el comportamiento visible en DOM.
+- Hay cobertura para los seis variants y una prueba de composicion anidada con `StrictMode`.
+
+## Dependencias
+
+- No incluye `framer-motion`.
+- No incluye otra dependencia externa de animacion.
+- `react` es `peerDependency`.
+- `typescript`, `vite`, `@vitejs/plugin-react`, `vitest`, `jsdom` y Testing Library son `devDependencies`.
+
+## Licencia
+
+Pendiente de definir. El `package.json` actual declara `"license": "UNLICENSED"` y no hay un archivo de licencia explicito en el repo.
