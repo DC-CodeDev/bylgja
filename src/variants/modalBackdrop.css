@@ -1,0 +1,6 @@
+.bylgja-modal-backdrop {
+  inset: 0;
+  opacity: calc(var(--spring-progress, 0) * var(--bylgja-backdrop-opacity, 0.48));
+  position: fixed;
+  will-change: opacity;
+}

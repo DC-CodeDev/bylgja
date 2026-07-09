@@ -1,0 +1,13 @@
+.bylgja-selected-highlight {
+  isolation: isolate;
+  position: relative;
+}
+
+.bylgja-selected-highlight::before {
+  background: currentColor;
+  content: "";
+  inset: 0;
+  opacity: calc(var(--spring-progress, 0) * 0.12);
+  pointer-events: none;
+  position: absolute;
+}

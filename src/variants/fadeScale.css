@@ -1,0 +1,6 @@
+.bylgja-fade-scale {
+  opacity: var(--spring-progress, 0);
+  transform: scale(calc(0.95 + (var(--spring-progress, 0) * 0.05)));
+  transform-origin: center;
+  will-change: opacity, transform;
+}
