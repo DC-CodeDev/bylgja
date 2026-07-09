@@ -9,13 +9,13 @@ Bylgja existe para cubrir animaciones de interfaz con una base pequena y verific
 El paquete actual esta configurado para consumo por git URL o tag. `package.json` tiene `"private": true` y no declara una publicacion de npm registry.
 
 ```bash
-npm install git+https://github.com/<org>/bylgja.git#v0.1.0
+npm install git+https://github.com/DC-CodeDev/bylgja.git#main
 ```
 
-Tambien puede instalarse desde otro tag o commit:
+El proyecto todavia no tiene tags de version publicados; `main` es la referencia estable actual. Cuando existan tags, tambien puede instalarse desde un tag o commit especifico:
 
 ```bash
-npm install git+https://github.com/<org>/bylgja.git#<tag>
+npm install git+https://github.com/DC-CodeDev/bylgja.git#<tag-o-commit>
 ```
 
 La distribucion usa ESM y tipos generados en `dist/`. El script `prepare` ejecuta `npm run build` al instalar desde git con npm.
