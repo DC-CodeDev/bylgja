@@ -1,0 +1,7 @@
+.bylgja-modal-panel {
+  opacity: var(--spring-progress, 0);
+  transform: translateY(calc((1 - var(--spring-progress, 0)) * 12px))
+    scale(calc(0.96 + (var(--spring-progress, 0) * 0.04)));
+  transform-origin: center;
+  will-change: opacity, transform;
+}

@@ -10,5 +10,6 @@ export { useModalBackdrop, } from "./variants/modalBackdrop.js";
 export { useModalPanel, } from "./variants/modalPanel.js";
 export { usePressable, } from "./variants/pressable.js";
 export { useSelectedHighlight, } from "./variants/selectedHighlight.js";
+export { TOOLTIP_CLASS_NAME, Tooltip, useTooltip, } from "./variants/tooltip.js";
 export { getReducedMotionPreference, useReducedMotion } from "./a11y/reducedMotion.js";
 //# sourceMappingURL=index.js.map

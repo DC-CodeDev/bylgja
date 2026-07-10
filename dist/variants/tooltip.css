@@ -1,0 +1,28 @@
+.bylgja-tooltip {
+  opacity: var(--spring-progress, 0);
+  pointer-events: none;
+  position: fixed;
+  transform: translate(var(--bylgja-tooltip-translate-x, 0), var(--bylgja-tooltip-translate-y, 0)) scale(calc(0.96 + (var(--spring-progress, 0) * 0.04)));
+  transform-origin: var(--bylgja-tooltip-transform-origin, center);
+  will-change: opacity, transform;
+}
+
+.bylgja-tooltip[data-placement^="top"] {
+  --bylgja-tooltip-transform-origin: bottom center;
+  --bylgja-tooltip-translate-y: calc((1 - var(--spring-progress, 0)) * 4px);
+}
+
+.bylgja-tooltip[data-placement^="bottom"] {
+  --bylgja-tooltip-transform-origin: top center;
+  --bylgja-tooltip-translate-y: calc((var(--spring-progress, 0) - 1) * 4px);
+}
+
+.bylgja-tooltip[data-placement^="left"] {
+  --bylgja-tooltip-transform-origin: center right;
+  --bylgja-tooltip-translate-x: calc((1 - var(--spring-progress, 0)) * 4px);
+}
+
+.bylgja-tooltip[data-placement^="right"] {
+  --bylgja-tooltip-transform-origin: center left;
+  --bylgja-tooltip-translate-x: calc((var(--spring-progress, 0) - 1) * 4px);
+}

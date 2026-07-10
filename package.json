@@ -13,7 +13,8 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./variants/*.css": "./src/variants/*.css",
+    "./variants/*.css": "./dist/variants/*.css",
+    "./variants/tooltip.css": "./dist/variants/tooltip.css",
     "./package.json": "./package.json"
   },
   "sideEffects": [
@@ -21,12 +22,12 @@
   ],
   "files": [
     "dist",
-    "src/variants/*.css",
     "README.md",
     "package.json"
   ],
   "peerDependencies": {
-    "react": "^18.0.0 || ^19.0.0-0"
+    "react": "^18.0.0 || ^19.0.0-0",
+    "react-dom": "^18.0.0 || ^19.0.0-0"
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.2",
@@ -41,11 +42,13 @@
     "vitest": "^4.1.10"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && npm run copy:variant-css",
+    "copy:variant-css": "node ./scripts/copy-variant-css.mjs",
     "demo:build": "vite build --config demo/vite.config.ts",
     "demo:dev": "vite --config demo/vite.config.ts",
     "prepare": "npm run build",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "verify:package": "node ./scripts/verify-package.mjs"
   }
 }

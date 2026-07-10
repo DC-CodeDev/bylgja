@@ -1,0 +1,5 @@
+.bylgja-pressable {
+  transform: scale(calc(1 - (var(--spring-progress, 0) * 0.03)));
+  transform-origin: center;
+  will-change: transform;
+}

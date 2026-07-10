@@ -99,6 +99,7 @@ export function Notice() {
 | Modal panel | `useModalPanel` | Panel con opacidad, desplazamiento y escala. |
 | Pressable | `usePressable` | Interaccion de presionado con handlers de mouse/pointer y spring. |
 | Selected highlight | `useSelectedHighlight` | Highlight de seleccion controlado por `selected`. |
+| Tooltip | `useTooltip`, `Tooltip` | Tooltip headless accesible, posicionado y con presencia. |
 | Reduced motion | `getReducedMotionPreference`, `useReducedMotion` | Lectura de `prefers-reduced-motion` desde el navegador. |
 
 Los tokens incluidos son `SPRING_GENTLE`, `SPRING_SNAPPY` y `FADE_QUICK`.
@@ -118,9 +119,50 @@ import "bylgja/variants/modalBackdrop.css";
 import "bylgja/variants/modalPanel.css";
 import "bylgja/variants/pressable.css";
 import "bylgja/variants/selectedHighlight.css";
+import "bylgja/variants/tooltip.css";
 ```
 
-Esos subpaths estan declarados en `package.json` como `./variants/*.css` y apuntan a `src/variants/*.css`.
+## Tooltip
+
+`useTooltip` es la primitive principal. No define colores, fondo, tipografia, borde ni sombra; el consumidor aporta esos estilos. Abre con hover de mouse/pen o foco, cierra con salida, blur y `Escape`, ignora pointer de tipo touch y conecta trigger y contenido mediante `aria-describedby` y `role="tooltip"`.
+
+```tsx
+import { Presence, SPRING_SNAPPY, useTooltip } from "bylgja";
+import "bylgja/variants/tooltip.css";
+
+function SaveButton() {
+  const tooltip = useTooltip({ placement: "top", openDelay: 500 });
+  return <>
+    <button {...tooltip.triggerProps}>Guardar</button>
+    <Presence show={tooltip.open} exitConfig={SPRING_SNAPPY} onSettled={tooltip.onExitComplete}>
+      <div {...tooltip.tooltipProps} className={tooltip.className} style={tooltip.tooltipStyle}>
+        Guardar cambios
+      </div>
+    </Presence>
+  </>;
+}
+```
+
+El componente `Tooltip` es un adaptador opcional sobre el hook; renderiza el contenido en `document.body` mediante portal para evitar recortes de ancestros.
+
+```tsx
+<Tooltip content="Guardar cambios" placement="top">
+  <button>Guardar</button>
+</Tooltip>
+```
+
+Soporta modo no controlado con `defaultOpen` y controlado con `open` y `onOpenChange`. Los placements son `top`, `right`, `bottom`, `left` y sus variantes `-start` y `-end`. Con el tooltip abierto se recalcula en resize, scroll y cambios de tamano; hace flip al lado opuesto si cabe y limita las coordenadas al viewport. La animacion usa `SPRING_SNAPPY`, `Presence` y `--spring-progress`; reduced motion conserva el comportamiento y salta directamente al estado final.
+
+```css
+/* Estilos pertenecientes a la aplicacion consumidora. */
+.bylgja-tooltip {
+  background: CanvasText;
+  color: Canvas;
+  padding: 4px 8px;
+}
+```
+
+Esos subpaths estan declarados en `package.json` como `./variants/*.css` y apuntan a `dist/variants/*.css`.
 
 ## API Publica
 
@@ -131,6 +173,7 @@ import {
   Presence,
   SPRING_GENTLE,
   SPRING_SNAPPY,
+  Tooltip,
   createRafSpringDriver,
   createSpringSolver,
   getReducedMotionPreference,
@@ -142,6 +185,7 @@ import {
   useReducedMotion,
   useSelectedHighlight,
   useSpring,
+  useTooltip,
 } from "bylgja";
 ```
 
