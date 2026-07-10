@@ -61,7 +61,18 @@ export function useSpring(targetValue, config, initialValue, onSettled) {
             if (!element) {
                 return;
             }
-            element.style.setProperty(SPRING_PROGRESS_PROPERTY, String(snapshot.value));
+            // While animating we write the live position, but once the spring has
+            // settled we snap to the exact target. The solver only guarantees the
+            // resting value is within `positionThreshold` of the target, so it comes
+            // to rest at e.g. 0.9992 rather than 1. That residual leaves
+            // `opacity: var(--spring-progress)` permanently below 1, and because the
+            // modal-panel variant sets `will-change: opacity`, the panel stays on its
+            // own GPU compositing layer and is composited at <100% opacity — which
+            // renders as a lighter rounded-rectangle frame against dark backgrounds.
+            // Snapping to the target at rest keeps will-change (and its perf win)
+            // while removing the artifact.
+            const renderedValue = snapshot.settled ? snapshot.target : snapshot.value;
+            element.style.setProperty(SPRING_PROGRESS_PROPERTY, String(renderedValue));
             if (snapshot.settled) {
                 // If the spring starts already settled, do not treat that initial
                 // snapshot as a completed animation.
