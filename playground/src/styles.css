@@ -1,0 +1,378 @@
+/* ============================================================
+   Spike: light trail via offset-path + useSpring
+   ============================================================ */
+
+.playground {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 2rem 1rem;
+  background: #111;
+  color: #eee;
+  font-family: system-ui, sans-serif;
+  box-sizing: border-box;
+}
+
+/* --- Fallback (no offset-path support) --- */
+
+.fallback {
+  background: #1a1a1a;
+  border-radius: 8px;
+  padding: 2rem;
+  font-size: 1rem;
+  color: #aaa;
+  text-align: center;
+}
+
+.fallback code {
+  background: #2a2a2a;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #f0a;
+}
+
+/* --- Header with toggle --- */
+
+.playground-header {
+  margin-bottom: 2rem;
+}
+
+.toggle-btn {
+  background: #2a2a2a;
+  color: #ccc;
+  border: 1px solid #555;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.toggle-btn:hover {
+  background: #333;
+  border-color: #777;
+  color: #eee;
+}
+
+/* --- Cards grid --- */
+
+.cards-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 2.5rem;
+}
+
+/* --- Card set (label + wrapper) --- */
+
+.card-set {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.card-size-label {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  user-select: none;
+}
+
+/* --- Card wrapper (click target) --- */
+
+.card-wrapper {
+  cursor: pointer;
+}
+
+/* --- Card element ---
+     useSpring writes --spring-progress onto this element.
+     Sizes are defined in separate classes. */
+
+.card {
+  --card-radius: 12px;
+  position: relative;
+  border: 2px solid #444;
+  border-radius: var(--card-radius);
+  background: #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* overflow visible para que el trail-dot no se recorte
+     al posicionarse sobre el borde de la card. */
+  overflow: visible;
+  transition: border-color 0.2s;
+}
+
+.card:hover {
+  border-color: #666;
+}
+
+.card--small {
+  width: 320px;
+  height: 200px;
+}
+
+.card--large {
+  width: 480px;
+  height: 600px;
+}
+
+/* --- Trail dot ---
+     offset-path: inset(0 round var(--card-radius)) border-box traza
+     un rectangulo con esquinas redondeadas que coincide exactamente
+     con el borde real de la card. A diferencia de border-box solo
+     (que Chromium interpreta como una elipse), la forma explicita
+     inset asegura esquinas rectangulares con el radio correcto. */
+
+.trail-dot {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+
+  offset-path: inset(0 round var(--card-radius)) border-box;
+  offset-distance: calc(var(--spring-progress, 0) * 100%);
+  offset-anchor: center;
+  offset-rotate: 0deg;
+
+  /* Opacidad derivada de spring-progress sin estado React extra.
+     Permanece en 1 durante el primer 80 % del recorrido y desciende
+     linealmente a 0 durante el ultimo 20 %, terminando exactamente
+     al llegar a progreso 1.
+     Formula: 5 - 5 * progress → clamp(0, resultado, 1)
+       progreso 0-0.8: resultado >= 1 → opacity 1
+       progreso 0.8-1 : resultado entre 1 y 0 → fade lineal
+       progreso 1    : resultado = 0 → opacity 0 */
+  opacity: clamp(0, 5 - 5 * var(--spring-progress, 0), 1);
+
+  border-radius: 50%;
+  background: radial-gradient(
+    circle 6px at center,
+    #5cf 40%,
+    rgba(85, 204, 255, 0.3) 70%,
+    transparent 100%
+  );
+  transition: none;
+}
+
+/* --- Label inside the card --- */
+
+.card-label {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-size: 0.875rem;
+  color: #777;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* ============================================================
+   Spike: wave propagation grid
+   ============================================================ */
+
+.playground-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.toggle-btn--active {
+  background: #3a3a3a;
+  border-color: #888;
+  color: #fff;
+}
+
+.wave-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.wave-config-panel {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.75rem;
+  color: #888;
+  font-family: "SF Mono", "Cascadia Code", "Fira Code", monospace;
+  background: #1a1a1a;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: 1px solid #333;
+}
+
+.wave-config-panel span {
+  white-space: nowrap;
+}
+
+.wave-origin-label {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #5cf;
+}
+
+.wave-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 64px);
+  grid-template-rows: repeat(6, 64px);
+  gap: 12px;
+}
+
+.grid-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1e1e1e;
+  border: 1px solid #444;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  user-select: none;
+}
+
+.grid-cell:hover {
+  border-color: #777;
+  background: #262626;
+}
+
+.grid-cell--origin {
+  border-color: #5cf;
+  background: #1a2a33;
+  box-shadow: 0 0 8px rgba(85, 204, 255, 0.2);
+}
+
+.grid-cell__index {
+  font-size: 0.75rem;
+  color: #555;
+  pointer-events: none;
+}
+
+/* ============================================================
+   Spike: pointer tracker tilt card
+   ============================================================ */
+
+.tilt-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  width: 100%;
+}
+
+.tilt-debug-panel {
+  display: flex;
+  gap: 1.5rem;
+  font-size: 0.75rem;
+  color: #888;
+  font-family: "SF Mono", "Cascadia Code", "Fira Code", monospace;
+  background: #1a1a1a;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: 1px solid #333;
+}
+
+.tilt-debug-panel span {
+  white-space: nowrap;
+}
+
+.tilt-debug-value {
+  color: #5cf;
+}
+
+.tilt-card-container {
+  perspective: 800px;
+}
+
+.tilt-card {
+  --card-tilt-w: var(--pointer-normalized-x, 0.5);
+  --card-tilt-h: var(--pointer-normalized-y, 0.5);
+  --card-inside: var(--pointer-inside, 0);
+
+  position: relative;
+  width: 340px;
+  height: 420px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #1e1e2a 0%, #16161e 100%);
+  border: 1px solid #333;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow: hidden;
+  cursor: default;
+  user-select: none;
+
+  transition: transform 0.3s ease-out;
+
+  transform:
+    perspective(800px)
+    rotateX(calc((var(--card-tilt-h) - 0.5) * 15deg * var(--card-inside, 0)))
+    rotateY(calc((0.5 - var(--card-tilt-w)) * 15deg * var(--card-inside, 0)));
+}
+
+.tilt-card-shine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      circle 200px at
+        calc(var(--pointer-normalized-x, 0.5) * 100%)
+        calc(var(--pointer-normalized-y, 0.5) * 100%),
+      rgba(255, 255, 255, 0.06),
+      transparent 60%
+    );
+  opacity: var(--pointer-inside, 0);
+  transition: opacity 0.3s ease-out;
+}
+
+.tilt-card-title {
+  position: relative;
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #eee;
+  letter-spacing: 0.02em;
+}
+
+.tilt-card-subtitle {
+  position: relative;
+  margin: 0 0 1rem;
+  font-size: 0.75rem;
+  color: #5cf;
+  font-family: "SF Mono", "Cascadia Code", "Fira Code", monospace;
+  letter-spacing: 0.05em;
+}
+
+.tilt-card-divider {
+  width: 40px;
+  height: 1px;
+  background: #444;
+  margin-bottom: 1rem;
+}
+
+.tilt-card-desc {
+  position: relative;
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #777;
+  line-height: 1.5;
+  max-width: 260px;
+}

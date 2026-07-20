@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, render } from "@testing-library/react";
-import { useCallback, useRef, useState } from "react";
+import { useRef } from "react";
 import { usePointerTracker, type PointerPosition } from "./usePointerTracker.js";
 
 interface MockRect {
@@ -308,5 +308,76 @@ describe("usePointerTracker", () => {
     unmount();
 
     expect(disconnectSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("calls onMove in pointerleave with the last known position from pointermove, not zeros", () => {
+    const rect = createMockRect({ left: 10, top: 20, width: 200, height: 100 });
+    stubGetBoundingClientRect(rect);
+    stubResizeObserver();
+
+    const onMove = vi.fn();
+    const { getByTestId } = render(<PointerTrackerComponent onMove={onMove} />);
+    const element = getByTestId("pointer-target");
+
+    act(() => {
+      element.dispatchEvent(new PointerEvent("pointerenter"));
+    });
+
+    act(() => {
+      element.dispatchEvent(
+        new PointerEvent("pointermove", { clientX: 110, clientY: 70 }),
+      );
+    });
+
+    // 110 - 10 = 100, 70 - 20 = 50
+    // 100 / 200 = 0.5, 50 / 100 = 0.5
+    expect(onMove).toHaveBeenLastCalledWith({
+      x: 100,
+      y: 50,
+      normalizedX: 0.5,
+      normalizedY: 0.5,
+      isInside: true,
+    });
+
+    act(() => {
+      element.dispatchEvent(new PointerEvent("pointerleave"));
+    });
+
+    // onMove should be called with the same positional values but isInside=false
+    expect(onMove).toHaveBeenCalledTimes(2);
+    expect(onMove).toHaveBeenLastCalledWith({
+      x: 100,
+      y: 50,
+      normalizedX: 0.5,
+      normalizedY: 0.5,
+      isInside: false,
+    });
+  });
+
+  it("calls onMove in pointerleave with zeros when no pointermove occurred before leave", () => {
+    const rect = createMockRect({ left: 10, top: 20, width: 200, height: 100 });
+    stubGetBoundingClientRect(rect);
+    stubResizeObserver();
+
+    const onMove = vi.fn();
+    const { getByTestId } = render(<PointerTrackerComponent onMove={onMove} />);
+    const element = getByTestId("pointer-target");
+
+    act(() => {
+      element.dispatchEvent(new PointerEvent("pointerenter"));
+    });
+
+    act(() => {
+      element.dispatchEvent(new PointerEvent("pointerleave"));
+    });
+
+    expect(onMove).toHaveBeenCalledTimes(1);
+    expect(onMove).toHaveBeenCalledWith({
+      x: 0,
+      y: 0,
+      normalizedX: 0,
+      normalizedY: 0,
+      isInside: false,
+    });
   });
 });

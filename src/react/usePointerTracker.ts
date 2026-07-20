@@ -25,6 +25,7 @@ export function usePointerTracker<T extends HTMLElement = HTMLElement>(
   const elementRef = useRef<T | null>(null);
   const rectRef = useRef<DOMRect | null>(null);
   const optionsRef = useRef(options);
+  const lastPositionRef = useRef<{ x: number; y: number; normalizedX: number; normalizedY: number } | null>(null);
   optionsRef.current = options;
 
   useEffect(() => {
@@ -50,6 +51,8 @@ export function usePointerTracker<T extends HTMLElement = HTMLElement>(
       const normalizedX = rect.width > 0 ? x / rect.width : 0;
       const normalizedY = rect.height > 0 ? y / rect.height : 0;
 
+      lastPositionRef.current = { x, y, normalizedX, normalizedY };
+
       element.style.setProperty(POINTER_X_PROPERTY, String(x));
       element.style.setProperty(POINTER_Y_PROPERTY, String(y));
       element.style.setProperty(POINTER_NORMALIZED_X_PROPERTY, String(normalizedX));
@@ -64,18 +67,15 @@ export function usePointerTracker<T extends HTMLElement = HTMLElement>(
       element.style.setProperty(POINTER_INSIDE_PROPERTY, "0");
 
       if (optionsRef.current?.onMove) {
-        const rect = rectRef.current;
-        if (rect) {
-          // Fire a final move report with isInside=false so callers know the cursor left,
-          // but keep the last known positional values unchanged.
-          optionsRef.current.onMove({
-            x: 0,
-            y: 0,
-            normalizedX: 0,
-            normalizedY: 0,
-            isInside: false,
-          });
-        }
+        // Use the last known position so callers receive the real cursor coordinates
+        // at the moment the pointer left, rather than zeros. If no pointermove has
+        // fired yet (pointerenter → pointerleave with no movement), fall back to
+        // zeros as the initial uncomputed state.
+        const last = lastPositionRef.current ?? { x: 0, y: 0, normalizedX: 0, normalizedY: 0 };
+        optionsRef.current.onMove({
+          ...last,
+          isInside: false,
+        });
       }
     };
 
