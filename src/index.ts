@@ -6,7 +6,6 @@ export {
   type SpringSolverConfig,
 } from "./core/spring-solver.js";
 export { SPRING_GENTLE, SPRING_SNAPPY } from "./tokens/springs.js";
-export { FADE_QUICK } from "./tokens/tweens.js";
 export { Presence } from "./react/Presence.js";
 export { useSpring } from "./react/useSpring.js";
 export {

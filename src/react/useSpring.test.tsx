@@ -48,7 +48,11 @@ function SpringTarget({
   config: SpringSolverConfig;
   initialValue?: number;
 }) {
-  const ref = useSpring<HTMLDivElement>(target, config, initialValue);
+  const ref = useSpring<HTMLDivElement>({
+    config,
+    initialValue,
+    targetValue: target,
+  });
 
   return <div data-testid="spring-target" ref={ref} />;
 }
@@ -182,7 +186,12 @@ describe("useSpring", () => {
       target: number;
       config: SpringSolverConfig;
     }) {
-      const ref = useSpring<HTMLDivElement>(target, config, 0, onSettled);
+      const ref = useSpring<HTMLDivElement>({
+        config,
+        initialValue: 0,
+        onSettled,
+        targetValue: target,
+      });
       return <div data-testid="spring-target-callback" ref={ref} />;
     }
 
@@ -338,7 +347,12 @@ describe("useSpring", () => {
       target: number;
       config: SpringSolverConfig;
     }) {
-      const ref = useSpring<HTMLDivElement>(target, config, 0, onSettled);
+      const ref = useSpring<HTMLDivElement>({
+        config,
+        initialValue: 0,
+        onSettled,
+        targetValue: target,
+      });
       return <div data-testid="spring-target-callback" ref={ref} />;
     }
 
@@ -372,7 +386,12 @@ describe("useSpring", () => {
       target: number;
       config: SpringSolverConfig;
     }) {
-      const ref = useSpring<HTMLDivElement>(target, config, 0, onSettled);
+      const ref = useSpring<HTMLDivElement>({
+        config,
+        initialValue: 0,
+        onSettled,
+        targetValue: target,
+      });
       return <div data-testid="spring-target-reduced-motion" ref={ref} />;
     }
 

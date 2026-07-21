@@ -18,6 +18,7 @@ import { SPRING_SNAPPY } from "../../src/tokens/springs.js";
 import type { SpringSolverConfig } from "../../src/core/spring-solver.js";
 import { WavePropagationView } from "./WavePropagationView.js";
 import { PointerTrackerTiltView } from "./PointerTrackerTiltView.js";
+import { ScrollRevealView } from "./ScrollRevealView.js";
 import "./styles.css";
 
 /**
@@ -106,7 +107,7 @@ function PulsingCard({
 
 export function App() {
   const [springKey, setSpringKey] = useState<SpringConfigKey>("snappy");
-  const [view, setView] = useState<"offset-path" | "wave-propagation" | "pointer-tracker">("offset-path");
+  const [view, setView] = useState<"offset-path" | "wave-propagation" | "pointer-tracker" | "scroll-reveal">("offset-path");
 
   if (!supportsOffsetPath()) {
     return (
@@ -155,6 +156,13 @@ export function App() {
           >
             Pointer Tracker
           </button>
+          <button
+            className={`toggle-btn${view === "scroll-reveal" ? " toggle-btn--active" : ""}`}
+            type="button"
+            onClick={() => setView("scroll-reveal")}
+          >
+            Scroll Reveal
+          </button>
         </div>
       </div>
 
@@ -173,8 +181,10 @@ export function App() {
         </div>
       ) : view === "wave-propagation" ? (
         <WavePropagationView />
-      ) : (
+      ) : view === "pointer-tracker" ? (
         <PointerTrackerTiltView />
+      ) : (
+        <ScrollRevealView />
       )}
     </main>
   );

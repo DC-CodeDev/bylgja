@@ -376,3 +376,115 @@
   line-height: 1.5;
   max-width: 260px;
 }
+
+/* ============================================================
+   Spike: scroll reveal on scroll
+   ============================================================ */
+
+.scroll-reveal-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding-bottom: 6rem;
+}
+
+.scroll-reveal-intro {
+  text-align: center;
+  margin: 2rem 0 4rem;
+}
+
+.scroll-reveal-intro h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #eee;
+}
+
+.scroll-reveal-intro p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #888;
+}
+
+.scroll-reveal-debug {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.6875rem;
+  font-family: "SF Mono", "Cascadia Code", "Fira Code", monospace;
+  color: #888;
+  line-height: 1.6;
+}
+
+.scroll-reveal-debug .debug-value {
+  color: #5cf;
+}
+
+.scroll-block {
+  --scroll-reveal-progress: clamp(0, calc(var(--scroll-progress, 0) / 0.3), 1);
+
+  width: 480px;
+  max-width: 90vw;
+  min-height: 260px;
+  margin: 6rem 0;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #1e1e2a 0%, #16161e 100%);
+  border: 1px solid #333;
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  opacity: var(--scroll-reveal-progress);
+  transform: translateY(calc((1 - var(--scroll-reveal-progress)) * 60px));
+  transition: none;
+}
+
+.scroll-block__number {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #5cf;
+  opacity: 0.6;
+  font-family: "SF Mono", "Cascadia Code", "Fira Code", monospace;
+  line-height: 1;
+  margin-bottom: 0.75rem;
+}
+
+.scroll-block__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #eee;
+}
+
+.scroll-block__desc {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #777;
+  line-height: 1.5;
+}
+
+.scroll-block__desc code {
+  color: #5cf;
+  font-family: "SF Mono", "Cascadia Code", "Fira Code", monospace;
+  font-size: 0.75rem;
+}
+
+.scroll-reveal-end {
+  margin-top: 4rem;
+  text-align: center;
+}
+
+.scroll-reveal-end p {
+  font-size: 0.875rem;
+  color: #555;
+}

@@ -1,0 +1,9 @@
+:root {
+  /*
+   * Central timing values for pure CSS animations.
+   * Any current or future variant/pillar that uses CSS transitions instead of
+   * the spring solver should read from here rather than inventing its own values.
+   */
+  --bylgja-duration-quick: 150ms;
+  --bylgja-ease-out: ease-out;
+}

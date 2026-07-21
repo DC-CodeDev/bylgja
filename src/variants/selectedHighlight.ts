@@ -28,7 +28,12 @@ export function useSelectedHighlight<T extends HTMLElement = HTMLElement>({
   selected,
   springConfig = SPRING_GENTLE,
 }: UseSelectedHighlightOptions): SelectedHighlightBinding<T> {
-  const ref = useSpring<T>(selected ? 1 : 0, springConfig, selected ? 1 : 0, onSettled);
+  const ref = useSpring<T>({
+    config: springConfig,
+    initialValue: selected ? 1 : 0,
+    onSettled,
+    targetValue: selected ? 1 : 0,
+  });
 
   return {
     className: joinClassNames(SELECTED_HIGHLIGHT_CLASS_NAME, className),

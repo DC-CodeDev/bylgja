@@ -31,12 +31,12 @@ function PresenceBody({
   targetValue,
   ...divProps
 }: PresenceBodyProps) {
-  const springRef: MutableRefObject<HTMLDivElement | null> = useSpring<HTMLDivElement>(
-    show ? ENTRY_TARGET : targetValue,
-    springConfig,
+  const springRef: MutableRefObject<HTMLDivElement | null> = useSpring<HTMLDivElement>({
+    config: springConfig,
     initialValue,
     onSettled,
-  );
+    targetValue: show ? ENTRY_TARGET : targetValue,
+  });
 
   return (
     <div ref={springRef} {...divProps}>

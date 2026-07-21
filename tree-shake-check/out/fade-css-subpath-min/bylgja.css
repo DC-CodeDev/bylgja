@@ -1,0 +1,2 @@
+:root{--bylgja-duration-quick:.15s;--bylgja-ease-out:ease-out}.bylgja-fade{will-change:opacity, transform}.bylgja-fade--spring{opacity:var(--spring-progress,0)}.bylgja-fade--tween{opacity:0;transition:opacity var(--bylgja-duration-quick,.15s) var(--bylgja-ease-out,ease-out)}.bylgja-fade--tween[data-state=visible]{opacity:1}
+/*$vite$:1*/

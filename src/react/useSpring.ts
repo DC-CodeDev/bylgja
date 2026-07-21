@@ -9,14 +9,18 @@ import { getReducedMotionPreference } from "../a11y/reducedMotion.js";
 
 const SPRING_PROGRESS_PROPERTY = "--spring-progress";
 
-export type UseSpringConfig = SpringSolverConfig;
+export interface UseSpringOptions {
+  targetValue: number;
+  config: SpringSolverConfig;
+  initialValue?: number;
+  onSettled?: () => void;
+  startDelay?: number;
+}
 
 export function useSpring<T extends HTMLElement = HTMLElement>(
-  targetValue: number,
-  config: UseSpringConfig,
-  initialValue?: number,
-  onSettled?: () => void,
+  options: UseSpringOptions,
 ): MutableRefObject<T | null> {
+  const { config, initialValue, onSettled, startDelay, targetValue } = options;
   const elementRef = useRef<T | null>(null);
   const driverRef = useRef<RafSpringDriver | null>(null);
   const onSettledRef = useRef(onSettled);
@@ -32,6 +36,7 @@ export function useSpring<T extends HTMLElement = HTMLElement>(
     config.timestep ?? "",
     config.velocityThreshold ?? "",
     config.positionThreshold ?? "",
+    startDelay ?? "",
   ].join(":");
 
   onSettledRef.current = onSettled;
@@ -77,6 +82,7 @@ export function useSpring<T extends HTMLElement = HTMLElement>(
 
     const driver = createRafSpringDriver({
       initialValue: resolvedInitialValue,
+      startDelay,
       targetValue,
       ...config,
     });

@@ -1,7 +1,6 @@
 export { createRafSpringDriver } from "./core/raf-driver.js";
 export { SpringSolver, createSpringSolver, type SpringSnapshot, type SpringSolverConfig, } from "./core/spring-solver.js";
 export { SPRING_GENTLE, SPRING_SNAPPY } from "./tokens/springs.js";
-export { FADE_QUICK } from "./tokens/tweens.js";
 export { Presence } from "./react/Presence.js";
 export { useSpring } from "./react/useSpring.js";
 export { useFade, type FadeBinding, type FadeState, type FadeStrategy, type UseFadeOptions, } from "./variants/fade.js";

@@ -102,7 +102,7 @@ export function Notice() {
 | Tooltip | `useTooltip`, `Tooltip` | Tooltip headless accesible, posicionado y con presencia. |
 | Reduced motion | `getReducedMotionPreference`, `useReducedMotion` | Lectura de `prefers-reduced-motion` desde el navegador. |
 
-Los tokens incluidos son `SPRING_GENTLE`, `SPRING_SNAPPY` y `FADE_QUICK`.
+Los tokens incluidos son `SPRING_GENTLE` y `SPRING_SNAPPY` como springs con nombre, mas `timing.css` como fuente de custom properties CSS para timings de animaciones puras.
 
 ## Reduced Motion y Accesibilidad
 
@@ -208,6 +208,7 @@ Esta estrategia evita exigir que las apps consumidoras transpilen TypeScript des
 - `useSpring` escribe una unica variable CSS fija por elemento: `--spring-progress`. No soporta multiples springs simultaneos sobre el mismo elemento con nombres de variable distintos.
 - `useReducedMotion` no acepta override manual. Lee automaticamente `prefers-reduced-motion` desde el sistema operativo o el navegador.
 - Los archivos CSS de cada variant deben importarse explicitamente para que las clases tengan efecto visual. Importar el hook TypeScript no aplica estilos por si solo.
+- `package.json` declara un subpath publico para `./variants/*.css`, pero no para `./tokens/*.css`. Aun asi, archivos CSS de variants pueden importar internamente archivos CSS de `tokens` como `fade.css` importando `timing.css`; esto fue verificado funcionando en builds de produccion con Vite, pero no fue verificado todavia contra otras herramientas de bundling mas estrictas con el mapeo de `exports`.
 - Las animaciones de salida se resuelven con `Presence`. No hay un hook publico separado para exit animations, porque un hook por si solo no puede posponer un desmontaje que ya decidio el componente padre.
 
 ## Desarrollo Local
@@ -236,7 +237,7 @@ Convenciones de testing del proyecto:
 - Para logica numerica o de estado, se prueban entradas, salidas y convergencia.
 - Para hooks de React, se prueba ciclo de vida con Testing Library y React.
 - Para variants con CSS, se verifica la clase, las custom properties y el comportamiento visible en DOM.
-- Hay cobertura para los seis variants y una prueba de composicion anidada con `StrictMode`.
+- Hay cobertura para los siete variants y una prueba de composicion anidada con `StrictMode`.
 
 ## Dependencias
 

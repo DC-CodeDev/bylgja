@@ -38,7 +38,12 @@ export function usePressable<T extends HTMLElement = HTMLElement>({
   springConfig = SPRING_SNAPPY,
 }: UsePressableOptions = {}): PressableBinding<T> {
   const [isPressed, setIsPressed] = useState(false);
-  const ref = useSpring<T>(isPressed ? 1 : 0, springConfig, 0, onSettled);
+  const ref = useSpring<T>({
+    config: springConfig,
+    initialValue: 0,
+    onSettled,
+    targetValue: isPressed ? 1 : 0,
+  });
 
   const press = (): void => {
     setIsPressed(true);

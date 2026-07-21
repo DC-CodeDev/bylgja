@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { createRafSpringDriver } from "./raf-driver.js";
 import { SpringSolver } from "./spring-solver.js";
 import { SPRING_GENTLE, SPRING_SNAPPY } from "../tokens/springs.js";
@@ -33,6 +33,10 @@ class ManualRafScheduler {
     return this.pending.size;
   }
 }
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe("createRafSpringDriver", () => {
   it("stops automatically when the solver becomes settled", () => {
@@ -151,6 +155,201 @@ describe("createRafSpringDriver", () => {
         scheduler,
       ),
     ).toThrow(/maxDeltaTime.*finite/i);
+  });
+
+  it("waits for startDelay before advancing the solver or emitting snapshots", () => {
+    const scheduler = new ManualRafScheduler();
+    const advanceSpy = vi.spyOn(SpringSolver.prototype, "advance");
+    const driver = createRafSpringDriver(
+      {
+        ...SPRING_GENTLE,
+        initialValue: 0,
+        targetValue: 1,
+        startDelay: 0.05,
+      },
+      scheduler,
+    );
+
+    let emissions = 0;
+    driver.subscribe(() => {
+      emissions += 1;
+    });
+
+    driver.start();
+    scheduler.step(0);
+    scheduler.step(16);
+    scheduler.step(16);
+    scheduler.step(16);
+
+    expect(advanceSpy).not.toHaveBeenCalled();
+    expect(emissions).toBe(0);
+    expect(driver.isRunning()).toBe(true);
+    expect(scheduler.pendingCount()).toBe(1);
+  });
+
+  it("starts animating after startDelay and still settles normally", () => {
+    const scheduler = new ManualRafScheduler();
+    const driver = createRafSpringDriver(
+      {
+        ...SPRING_SNAPPY,
+        initialValue: 0,
+        targetValue: 1,
+        startDelay: 0.032,
+      },
+      scheduler,
+    );
+
+    let emissions = 0;
+    driver.subscribe(() => {
+      emissions += 1;
+    });
+
+    driver.start();
+    scheduler.step(0);
+    scheduler.step(16);
+    expect(emissions).toBe(0);
+
+    let safety = 0;
+    while (scheduler.pendingCount() > 0 && safety < 1000) {
+      scheduler.step(16);
+      safety += 1;
+    }
+
+    expect(safety).toBeLessThan(1000);
+    expect(emissions).toBeGreaterThan(1);
+    expect(driver.getSnapshot().target).toBe(1);
+    expect(Math.abs(driver.getSnapshot().value - driver.getSnapshot().target)).toBeLessThan(0.01);
+    expect(driver.isRunning()).toBe(false);
+  });
+
+  it("defaults to the previous behavior when startDelay is omitted", () => {
+    const schedulerWithoutDelay = new ManualRafScheduler();
+    const schedulerZeroDelay = new ManualRafScheduler();
+    const driverWithoutDelay = createRafSpringDriver(
+      {
+        ...SPRING_GENTLE,
+        initialValue: 0,
+        targetValue: 1,
+      },
+      schedulerWithoutDelay,
+    );
+    const driverZeroDelay = createRafSpringDriver(
+      {
+        ...SPRING_GENTLE,
+        initialValue: 0,
+        targetValue: 1,
+        startDelay: 0,
+      },
+      schedulerZeroDelay,
+    );
+
+    const snapshotsWithoutDelay: Array<{ value: number; velocity: number; target: number }> = [];
+    const snapshotsZeroDelay: Array<{ value: number; velocity: number; target: number }> = [];
+
+    driverWithoutDelay.subscribe((snapshot) => {
+      snapshotsWithoutDelay.push(snapshot);
+    });
+    driverZeroDelay.subscribe((snapshot) => {
+      snapshotsZeroDelay.push(snapshot);
+    });
+
+    driverWithoutDelay.start();
+    driverZeroDelay.start();
+
+    schedulerWithoutDelay.step(0);
+    schedulerZeroDelay.step(0);
+    schedulerWithoutDelay.step(16);
+    schedulerZeroDelay.step(16);
+    schedulerWithoutDelay.step(16);
+    schedulerZeroDelay.step(16);
+
+    expect(snapshotsWithoutDelay).toHaveLength(snapshotsZeroDelay.length);
+
+    for (const [index, snapshot] of snapshotsWithoutDelay.entries()) {
+      expect(snapshot.value).toBeCloseTo(snapshotsZeroDelay[index].value, 12);
+      expect(snapshot.velocity).toBeCloseTo(snapshotsZeroDelay[index].velocity, 12);
+      expect(snapshot.target).toBe(snapshotsZeroDelay[index].target);
+    }
+  });
+
+  it("rejects invalid startDelay values", () => {
+    const scheduler = new ManualRafScheduler();
+
+    expect(() =>
+      createRafSpringDriver(
+        {
+          ...SPRING_GENTLE,
+          initialValue: 0,
+          targetValue: 1,
+          startDelay: Number.NaN,
+        },
+        scheduler,
+      ),
+    ).toThrow(/startDelay.*finite/i);
+    expect(() =>
+      createRafSpringDriver(
+        {
+          ...SPRING_GENTLE,
+          initialValue: 0,
+          targetValue: 1,
+          startDelay: Number.POSITIVE_INFINITY,
+        },
+        scheduler,
+      ),
+    ).toThrow(/startDelay.*finite/i);
+    expect(() =>
+      createRafSpringDriver(
+        {
+          ...SPRING_GENTLE,
+          initialValue: 0,
+          targetValue: 1,
+          startDelay: -0.01,
+        },
+        scheduler,
+      ),
+    ).toThrow(/startDelay.*non-negative/i);
+  });
+
+  it("resets startDelay when start is called again on a reused driver", () => {
+    const scheduler = new ManualRafScheduler();
+    const advanceSpy = vi.spyOn(SpringSolver.prototype, "advance");
+    const driver = createRafSpringDriver(
+      {
+        ...SPRING_GENTLE,
+        initialValue: 0,
+        targetValue: 1,
+        startDelay: 0.05,
+      },
+      scheduler,
+    );
+
+    let emissions = 0;
+    driver.subscribe(() => {
+      emissions += 1;
+    });
+
+    driver.start();
+    scheduler.step(0);
+    scheduler.step(16);
+    scheduler.step(16);
+    driver.stop();
+
+    expect(advanceSpy).not.toHaveBeenCalled();
+    expect(emissions).toBe(0);
+
+    driver.start();
+    scheduler.step(0);
+    scheduler.step(16);
+    scheduler.step(16);
+    scheduler.step(16);
+
+    expect(advanceSpy).not.toHaveBeenCalled();
+    expect(emissions).toBe(0);
+
+    scheduler.step(16);
+
+    expect(advanceSpy).toHaveBeenCalledTimes(1);
+    expect(emissions).toBe(1);
   });
 
   it("emits snapshots to subscribers and supports unsubscribe", () => {

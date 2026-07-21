@@ -5,6 +5,7 @@ export interface RafSpringDriverOptions extends SpringSolverConfig {
   targetValue: number;
   initialVelocity?: number;
   maxDeltaTime?: number;
+  startDelay?: number;
 }
 
 export type RafSpringSubscriber = (snapshot: SpringSnapshot) => void;
@@ -29,12 +30,19 @@ export function createRafSpringDriver(
   },
 ): RafSpringDriver {
   const maxDeltaTime = options.maxDeltaTime ?? 0.25;
+  const startDelay = options.startDelay ?? 0;
 
   if (!Number.isFinite(maxDeltaTime)) {
     throw new Error("createRafSpringDriver requires maxDeltaTime to be finite.");
   }
   if (maxDeltaTime <= 0) {
     throw new Error("createRafSpringDriver requires maxDeltaTime to be positive.");
+  }
+  if (!Number.isFinite(startDelay)) {
+    throw new Error("createRafSpringDriver requires startDelay to be finite.");
+  }
+  if (startDelay < 0) {
+    throw new Error("createRafSpringDriver requires startDelay to be non-negative.");
   }
 
   const solver = new SpringSolver(
@@ -59,6 +67,8 @@ export function createRafSpringDriver(
   let frameHandle: number | null = null;
   let running = false;
   let previousTimestamp: number | null = null;
+  let delayElapsed = 0;
+  let delayCompleted = startDelay === 0;
 
   const emit = (): void => {
     const snapshot = solver.snapshot();
@@ -85,12 +95,26 @@ export function createRafSpringDriver(
 
     if (previousTimestamp === null) {
       previousTimestamp = timestamp;
+      if (!delayCompleted) {
+        frameHandle = requestFrame(tick);
+        return;
+      }
     } else {
       const deltaTimeSeconds = Math.min(
         maxDeltaTime,
         Math.max(0, (timestamp - previousTimestamp) / 1000),
       );
       previousTimestamp = timestamp;
+
+      if (!delayCompleted) {
+        delayElapsed += deltaTimeSeconds;
+        if (delayElapsed < startDelay) {
+          frameHandle = requestFrame(tick);
+          return;
+        }
+        delayCompleted = true;
+      }
+
       solver.advance(deltaTimeSeconds);
     }
 
@@ -112,6 +136,8 @@ export function createRafSpringDriver(
 
       running = true;
       previousTimestamp = null;
+      delayElapsed = 0;
+      delayCompleted = startDelay === 0;
 
       if (solver.isSettled()) {
         emit();
