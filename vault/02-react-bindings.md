@@ -152,3 +152,43 @@ export function usePointerTracker<T extends HTMLElement = HTMLElement>(
 
 - El `useEffect` se ejecuta una sola vez (dependencia `[]`). Las opciones se leen desde `optionsRef` para no recrear listeners.
 
+## `useScrollProgress`
+
+### Firma real actual
+
+```ts
+export interface UseScrollProgressOptions {
+  threshold?: number;
+}
+
+export function useScrollProgress<T extends HTMLElement = HTMLElement>(
+  options?: UseScrollProgressOptions,
+): MutableRefObject<T | null>
+```
+
+### Qué hace
+
+- Devuelve un `ref` mutable para asociarlo a un elemento DOM.
+- Expone tres custom properties CSS sobre el elemento:
+  - `--scroll-visible`: `1` si el elemento intersecta el viewport según el threshold configurado, `0` en caso contrario.
+  - `--scroll-visible-ratio`: valor crudo de `entry.intersectionRatio` del `IntersectionObserver`, entre 0 y 1.
+  - `--scroll-progress`: 0 cuando el borde inferior del elemento coincide con el borde inferior del viewport (empieza a asomar), 1 cuando el borde superior del elemento coincide con el borde superior del viewport (terminó de salir). Siempre clampeado entre 0 y 1.
+- Sin re-renders de React — todos los valores se escriben directo en `element.style`.
+- `IntersectionObserver` para `scroll-visible` y `scroll-visible-ratio` (con el `threshold` configurado, default 0.1).
+- Cálculo de `scroll-progress` vía `requestAnimationFrame` desde eventos de `scroll` de window, con una bandera que evita agendar más de un frame por vez. El cálculo también se ejecuta inmediatamente al montar el hook, sin esperar el primer evento de scroll.
+- Listener de scroll con `{ passive: true }` para no interferir con el rendimiento del scroll del navegador.
+
+### Fórmula de `scroll-progress`
+
+```
+rawProgress = (window.innerHeight - rect.top) / (window.innerHeight + rect.height)
+progress = Math.max(0, Math.min(1, rawProgress))
+```
+
+El denominador (`window.innerHeight + rect.height`) es el recorrido total del elemento a través del viewport. El clamps garantiza que ningún consumidor reciba valores fuera de rango en posiciones extremas.
+
+### Dependencias reales
+
+- El `useEffect` se ejecuta cuando `threshold` cambia (dependencia `[threshold]`).
+- Sin referencias a opciones externas mutables dentro del efecto — todo lo necesario se captura en el closure o se lee del DOM en el momento del cálculo.
+

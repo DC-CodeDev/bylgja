@@ -77,6 +77,40 @@ Resultado: la dirección de la inclinación se percibió correcta e intuitiva en
 
 Primitiva terminada, probada con 10 tests unitarios, y validada visualmente con un caso de uso representativo (tilt). Pendiente, sin urgencia: decidir si y cuándo se conecta a `index.ts` como parte de la API pública del paquete — mismo criterio de espera deliberada ya aplicado con `createWavePropagation`.
 
+### Pilar 3 — observación de scroll (sesión del 20 de julio de 2026)
+
+**Estado: primitiva construida, probada, auditada, y validada visualmente con un caso de uso real. No conectada todavía a `index.ts` como API pública.**
+
+#### Qué es y para qué sirve
+
+Mismo patrón que los pilares 1 y 2: primitiva de datos, no un efecto en sí misma. Expone en qué posición de scroll está un elemento respecto al viewport, para que distintos efectos reaccionen a eso. Casos de uso identificados para el futuro cercano: reveal on scroll (elementos que aparecen al entrar en viewport) y parallax (elementos que se desplazan a distinta velocidad que el scroll de la página). Se construyó pensando en ambos desde el diseño, aunque el spike de esta sesión solo valida el primero.
+
+#### Decisiones de diseño
+
+**Tres valores expuestos, no solo uno.** `--scroll-visible` (booleano, si el elemento intersecta el viewport según un threshold configurable, default 0.1), `--scroll-visible-ratio` (0 a 1, dato crudo de `IntersectionObserver`, prácticamente gratis de obtener), y `--scroll-progress` (0 a 1, calculado, el más costoso de los tres en términos de diseño). Se decidió construir `progress` ya en esta sesión en vez de posponerlo para cuando se construya parallax, porque los otros dos campos no requerían trabajo adicional real más allá de leer `IntersectionObserver` — el costo de diseño estaba concentrado en `progress`, y tenerlo ya resuelto evita tener que volver a este archivo cuando se aborde parallax más adelante.
+
+**Definición de `progress` acordada explícitamente.** El recorrido considerado es la suma de la altura del viewport más la altura del elemento — no solo uno de los dos — para que el cálculo tenga sentido tanto para elementos más chicos que el viewport como para elementos más grandes. `progress = 0` en el instante en que el borde inferior del elemento coincide con el borde inferior del viewport (recién asoma desde abajo). `progress = 1` en el instante en que el borde superior del elemento coincide con el borde superior del viewport (terminó de salir por arriba). Resultado siempre clampeado entre 0 y 1 inclusive, para que ningún consumidor reciba valores fuera de rango en escenarios extremos de posición.
+
+**Cálculo inmediato al montar, no solo reactivo a scroll.** Un elemento parcialmente visible al cargar la página (antes de cualquier scroll del usuario) debe mostrar su `progress` correcto desde el primer render, no arrancar en 0 artificialmente hasta el primer evento.
+
+**Un cálculo por frame, no por evento crudo.** El evento `scroll` puede dispararse muchas veces por frame. Se agenda el recálculo real (`getBoundingClientRect` + fórmula de progreso) vía `requestAnimationFrame`, con una referencia que actúa de bandera para no agendar un segundo frame si ya hay uno pendiente. Mismo principio de eficiencia ya aplicado en `usePointerTracker` para `pointermove`, adaptado a la naturaleza distinta del evento de scroll (acá no hay un rect cacheable de forma útil, porque lo que cambia es justamente la posición relativa al viewport).
+
+**Listener de scroll pasivo.** Se agregó `{ passive: true }` al listener de `scroll`, no solicitado explícitamente en el diseño pero correcto por buena práctica: le indica al navegador que este listener nunca llama `preventDefault()`, permitiendo optimizar el scroll sin esperar a que el código de Bylgja termine de ejecutarse.
+
+#### Auditoría
+
+Se auditó el código completo línea por línea, en particular la fórmula de `progress` verificada con números concretos (viewport de 1000px, elemento de 200px, confirmando que da exactamente 0 y exactamente 1 en los dos casos límite de la definición), el mecanismo de una sola ejecución por frame, y la ubicación del clamp. Sin hallazgos — la implementación coincidió con el diseño acordado sin desviaciones, a diferencia de los dos hooks anteriores de esta misma sesión donde la auditoría sí encontró comportamiento no especificado.
+
+#### Validación visual
+
+Spike en el playground (cuarta vista alternable junto a las de `offset-path`, `wave-propagation` y `pointer-tracker-tilt`): página de scroll vertical con ocho bloques distribuidos con espacio entre sí. Cada bloque usa `useScrollProgress` para un efecto de reveal compuesto — no un aparece/desaparece binario, sino opacidad y desplazamiento vertical controlados de forma continua por `--scroll-progress` durante el primer 30% del recorrido de cada elemento, con opacidad completa y posición final estable durante el resto. Panel fijo en pantalla mostrando en vivo los tres valores del elemento más activo mientras se scrollea.
+
+Resultado: efecto validado sin ajustes, sin discontinuidad visible en el punto de quiebre donde termina el tramo de aparición.
+
+#### Pilar 3 — estado final
+
+Primitiva terminada, probada con 8 tests unitarios, auditada sin hallazgos, y validada visualmente con reveal on scroll. Parallax queda como caso de uso futuro sin fecha, ya habilitado por el campo `progress` sin necesidad de rediseñar la primitiva cuando se aborde. Pendiente, sin urgencia: decisión de si y cuándo conectar a `index.ts`, mismo criterio ya aplicado a `createWavePropagation` y `usePointerTracker`.
+
 ---
 
 ## 2026-07-19
