@@ -263,6 +263,285 @@
 }
 
 /* ============================================================
+   Spike: FLIP layout transitions
+   ============================================================ */
+
+.flip-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: min(960px, 100%);
+}
+
+.flip-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  justify-content: space-between;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+}
+
+.flip-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.flip-caption {
+  margin: 0;
+  color: #8d96a6;
+  font-size: 0.8125rem;
+}
+
+.flip-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.flip-breakpoint {
+  margin: 0;
+  color: #c7d0dd;
+  font-size: 0.8125rem;
+}
+
+.flip-select-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #c7d0dd;
+  font-size: 0.8125rem;
+}
+
+.flip-select {
+  background: #2a2a2a;
+  color: #ccc;
+  border: 1px solid #555;
+  border-radius: 6px;
+  padding: 0.45rem 0.75rem;
+  font: inherit;
+}
+
+.flip-grid {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+}
+
+.flip-card {
+  aspect-ratio: 1 / 1;
+  min-height: 120px;
+  border-radius: 20px;
+  padding: 1rem;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.24);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: #111;
+}
+
+.flip-card__index {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+
+.flip-card__label {
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+/* ============================================================
+   Diagnostic: shared element overlay
+   ============================================================ */
+
+.shared-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: min(960px, 100%);
+}
+
+.shared-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1rem 1.25rem;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 10px;
+}
+
+.shared-meta h2,
+.shared-meta p {
+  margin: 0;
+}
+
+.shared-meta h2 {
+  font-size: 1rem;
+  color: #f2f5f7;
+}
+
+.shared-meta p {
+  font-size: 0.85rem;
+  color: #9ca8b6;
+  line-height: 1.5;
+}
+
+.shared-diagnostics {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding-top: 0.5rem;
+  font-size: 0.75rem;
+  color: #7ed7ff;
+  font-family: "SF Mono", "Cascadia Code", "Fira Code", monospace;
+}
+
+.shared-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.shared-card {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: inherit;
+  cursor: pointer;
+}
+
+.shared-card__inner {
+  aspect-ratio: 1 / 1;
+  border-radius: 20px;
+  padding: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: rgba(17, 17, 17, 0.92);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.24);
+}
+
+.shared-card__index,
+.shared-card__label {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.shared-card__index {
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+.shared-card__label {
+  font-size: 0.95rem;
+}
+
+.shared-card__media {
+  flex: 1;
+  margin: 0.75rem 0;
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.05)),
+    rgba(17, 17, 17, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+}
+
+.shared-overlay-fade {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+}
+
+.shared-overlay-shell {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: rgba(7, 10, 14, 0.8);
+  backdrop-filter: blur(8px);
+}
+
+.shared-overlay-close {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  background: rgba(17, 17, 17, 0.75);
+  color: #f2f5f7;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  padding: 0.65rem 1rem;
+  cursor: pointer;
+}
+
+.shared-overlay-stage {
+  width: min(760px, calc(100vw - 4rem));
+}
+
+.shared-overlay-card {
+  min-height: min(72vh, 680px);
+  border-radius: 32px;
+  padding: clamp(1.25rem, 2vw, 2rem);
+  box-shadow: 0 40px 120px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  color: rgba(17, 17, 17, 0.92);
+}
+
+.shared-overlay-card__eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.72;
+}
+
+.shared-overlay-card__media {
+  flex: 1;
+  min-height: 260px;
+  border-radius: 24px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.08)),
+    rgba(17, 17, 17, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+}
+
+.shared-overlay-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.shared-overlay-card__body h3,
+.shared-overlay-card__body p {
+  margin: 0;
+}
+
+.shared-overlay-card__body h3 {
+  font-size: clamp(2rem, 5vw, 4rem);
+  text-transform: capitalize;
+}
+
+.shared-overlay-card__body p {
+  max-width: 32rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* ============================================================
    Spike: pointer tracker tilt card
    ============================================================ */
 
@@ -487,4 +766,156 @@
 .scroll-reveal-end p {
   font-size: 0.875rem;
   color: #555;
+}
+
+/* ============================================================
+   Spike: CSS loops preset gallery
+   ============================================================ */
+
+.loop-view {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 2rem 0 3rem;
+}
+
+.loop-grid {
+  width: min(920px, 100%);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1.5rem;
+}
+
+.loop-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.loop-card--wide {
+  grid-column: span 2;
+}
+
+.loop-stage {
+  position: relative;
+  width: 100%;
+  min-height: 132px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  border: 1px solid #2f2f2f;
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.06), transparent 55%),
+    linear-gradient(180deg, #181818 0%, #101010 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.loop-stage--orbit {
+  overflow: hidden;
+}
+
+.loop-swatch {
+  width: 60px;
+  height: 60px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #9fe7ff 0%, #7db8ff 100%);
+}
+
+.loop-skeleton {
+  width: 200px;
+  height: 16px;
+  border-radius: 6px;
+}
+
+.loop-dot-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.loop-dot {
+  background: radial-gradient(circle at 35% 35%, #f4fbff 0%, #7fc8ff 55%, #4d86ff 100%);
+  box-shadow: 0 0 12px rgba(125, 184, 255, 0.28);
+}
+
+.loop-bar-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.35rem;
+  height: 40px;
+}
+
+.loop-bar {
+  background: linear-gradient(180deg, #b5ecff 0%, #6fb8ff 100%);
+  box-shadow: 0 0 10px rgba(111, 184, 255, 0.2);
+}
+
+.loop-skeleton-wave {
+  width: min(240px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.loop-skeleton-line {
+  height: 12px;
+  border-radius: 4px;
+  background: #4b4b4b;
+}
+
+.loop-skeleton-line--1 {
+  width: 100%;
+}
+
+.loop-skeleton-line--2 {
+  width: 78%;
+}
+
+.loop-skeleton-line--3 {
+  width: 92%;
+}
+
+.loop-skeleton-line--4 {
+  width: 64%;
+}
+
+.loop-ripple-stage {
+  position: relative;
+  width: 4.5rem;
+  height: 4.5rem;
+}
+
+.loop-ripple-ring {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  box-shadow: 0 0 18px rgba(125, 184, 255, 0.12);
+}
+
+.loop-orbit-center {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.loop-orbit-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 35% 35%, #e8fbff 0%, #8addff 45%, #4a84ff 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 0 16px rgba(125, 184, 255, 0.4);
+}
+
+.loop-label {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #a5a5a5;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
 }

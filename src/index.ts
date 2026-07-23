@@ -7,6 +7,21 @@ export {
 } from "./core/spring-solver.js";
 export { SPRING_GENTLE, SPRING_SNAPPY } from "./tokens/springs.js";
 export { Presence } from "./react/Presence.js";
+export {
+  centerOutStagger,
+  linearStagger,
+  useStagger,
+  type StaggerBinding,
+  type StaggerCurve,
+  type UseStaggerOptions,
+} from "./react/useStagger.js";
+export {
+  BREAKPOINTS,
+  useBreakpoint,
+  type Breakpoint,
+} from "./react/useBreakpoint.js";
+export { useFlip } from "./react/useFlip.js";
+export { useSharedElementFlip } from "./react/useSharedElementFlip.js";
 export { useSpring } from "./react/useSpring.js";
 export {
   useFade,

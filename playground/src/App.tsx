@@ -19,6 +19,9 @@ import type { SpringSolverConfig } from "../../src/core/spring-solver.js";
 import { WavePropagationView } from "./WavePropagationView.js";
 import { PointerTrackerTiltView } from "./PointerTrackerTiltView.js";
 import { ScrollRevealView } from "./ScrollRevealView.js";
+import { LoopPresetsView } from "./LoopPresetsView.js";
+import { FlipLayoutView } from "./FlipLayoutView.js";
+import { SharedElementView } from "./SharedElementView.js";
 import "./styles.css";
 
 /**
@@ -38,11 +41,38 @@ const SPRING_DEBUG_SLOW = {
 } as const;
 
 type SpringConfigKey = "snappy" | "debug-slow";
+type PlaygroundView =
+  | "offset-path"
+  | "wave-propagation"
+  | "pointer-tracker"
+  | "scroll-reveal"
+  | "loops"
+  | "flip-layout"
+  | "shared-element";
 
 const SPRING_CONFIGS: Record<SpringConfigKey, SpringSolverConfig> = {
   "snappy": SPRING_SNAPPY,
   "debug-slow": SPRING_DEBUG_SLOW,
 };
+
+function getInitialView(): PlaygroundView {
+  if (typeof window === "undefined") {
+    return "offset-path";
+  }
+
+  const requestedView = new URLSearchParams(window.location.search).get("view");
+  switch (requestedView) {
+    case "wave-propagation":
+    case "pointer-tracker":
+    case "scroll-reveal":
+    case "loops":
+    case "flip-layout":
+    case "shared-element":
+      return requestedView;
+    default:
+      return "offset-path";
+  }
+}
 
 function supportsOffsetPath(): boolean {
   return (
@@ -107,15 +137,7 @@ function PulsingCard({
 
 export function App() {
   const [springKey, setSpringKey] = useState<SpringConfigKey>("snappy");
-  const [view, setView] = useState<"offset-path" | "wave-propagation" | "pointer-tracker" | "scroll-reveal">("offset-path");
-
-  if (!supportsOffsetPath()) {
-    return (
-      <div className="fallback">
-        Tu navegador no soporta <code>offset-path</code>
-      </div>
-    );
-  }
+  const [view, setView] = useState<PlaygroundView>(() => getInitialView());
 
   const toggleConfig = () => {
     setSpringKey((k) => (k === "snappy" ? "debug-slow" : "snappy"));
@@ -163,26 +185,59 @@ export function App() {
           >
             Scroll Reveal
           </button>
+          <button
+            className={`toggle-btn${view === "loops" ? " toggle-btn--active" : ""}`}
+            type="button"
+            onClick={() => setView("loops")}
+          >
+            CSS Loops
+          </button>
+          <button
+            className={`toggle-btn${view === "flip-layout" ? " toggle-btn--active" : ""}`}
+            type="button"
+            onClick={() => setView("flip-layout")}
+          >
+            FLIP Layout
+          </button>
+          <button
+            className={`toggle-btn${view === "shared-element" ? " toggle-btn--active" : ""}`}
+            type="button"
+            onClick={() => setView("shared-element")}
+          >
+            Shared Element
+          </button>
         </div>
       </div>
 
       {view === "offset-path" ? (
-        <div className="cards-grid">
-          <PulsingCard
-            springConfig={activeConfig}
-            cardClassName="card--small"
-            label="320 × 200 px"
-          />
-          <PulsingCard
-            springConfig={activeConfig}
-            cardClassName="card--large"
-            label="480 × 600 px"
-          />
-        </div>
+        supportsOffsetPath() ? (
+          <div className="cards-grid">
+            <PulsingCard
+              springConfig={activeConfig}
+              cardClassName="card--small"
+              label="320 × 200 px"
+            />
+            <PulsingCard
+              springConfig={activeConfig}
+              cardClassName="card--large"
+              label="480 × 600 px"
+            />
+          </div>
+        ) : (
+          <div className="fallback">
+            Tu navegador no soporta <code>offset-path</code>
+          </div>
+        )
       ) : view === "wave-propagation" ? (
         <WavePropagationView />
       ) : view === "pointer-tracker" ? (
         <PointerTrackerTiltView />
+      ) : view === "loops" ? (
+        <LoopPresetsView />
+      ) : view === "flip-layout" ? (
+        <FlipLayoutView />
+      ) : view === "shared-element" ? (
+        <SharedElementView />
       ) : (
         <ScrollRevealView />
       )}
