@@ -104,3 +104,30 @@ Envuelve `SpringSolver` en un loop de RAF y expone una interfaz de driver:
 - clamp defensivo de `deltaTime` para evitar saltos largos de pestaña inactiva o frame stalls;
 - separación entre solver puro y scheduler externo opcional para testear sin RAF real;
 - modelo push por `subscribe()` en vez de re-render o polling.
+
+## `object-utils.ts`
+
+### Qué hace
+
+Expone `stripUndefined(object)`.
+
+- recibe un objeto;
+- devuelve un objeto nuevo sin ninguna clave cuyo valor sea `undefined`.
+
+### Motivo de diseño
+
+El helper existe para trabajar correctamente con `exactOptionalPropertyTypes: true` cuando se arman objetos de opciones con campos opcionales antes de pasarlos a funciones con firmas estrictas. Si una propiedad opcional queda presente con valor `undefined`, TypeScript la considera distinta de una propiedad omitida; `stripUndefined` elimina esa diferencia también en runtime.
+
+### Tipo de retorno
+
+El tipo de retorno está ajustado para:
+
+- preservar las claves cuyo valor nunca puede ser `undefined`;
+- volver opcionales las claves cuyo tipo sí admite `undefined`;
+- excluir `undefined` del tipo de esas claves opcionales.
+
+Resultado: el objeto devuelto queda alineado con la semántica esperada por `exactOptionalPropertyTypes: true`.
+
+### Uso esperado
+
+Usarlo al construir objetos de opciones con propiedades opcionales antes de pasarlos a funciones con firmas estrictas, por ejemplo cuando `startDelay` o `onSettled` pueden venir ausentes y no deben quedar materializados como `undefined`.

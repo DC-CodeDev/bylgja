@@ -56,12 +56,20 @@ El cambio reciente visible en el diff local extiende el script para cubrir tambi
 }
 ```
 
+Actualización del 21 de julio de 2026:
+
+- `exports` ahora también incluye `"./tokens/*.css": "./dist/tokens/*.css"`;
+- sigue el mismo patrón wildcard que `variants`;
+- no se agregó una entrada puntual redundante para `timing.css`.
+
 Consecuencias:
 
 - el entrypoint JS público es `bylgja`
 - el CSS de variants se consume por subpath, por ejemplo:
   - `bylgja/variants/fade.css`
   - `bylgja/variants/tooltip.css`
+- el CSS de tokens también puede resolverse por subpath, por ejemplo:
+  - `bylgja/tokens/timing.css`
 - `timing.css` no se exporta como subpath para consumo directo; se distribuye porque es dependencia interna del CSS del paquete
 
 ## `sideEffects` y tree shaking
@@ -103,4 +111,5 @@ Resultado: el tree shaking del JS del paquete dio positivo en el chequeo local d
 
 - que `Tooltip` y `useTooltip` existan como runtime exports;
 - que `bylgja/variants/tooltip.css` resuelva correctamente;
+- que `bylgja/tokens/timing.css` resuelva correctamente;
 - que `dist/index.d.ts` contenga tipos clave del tooltip.

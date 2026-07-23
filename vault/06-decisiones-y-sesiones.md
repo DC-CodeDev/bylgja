@@ -1,5 +1,143 @@
 # Decisiones y sesiones
 
+## 2026-07-23
+
+### Graduación de `useDraggable` desde playground a API real (sesión del 23 de julio de 2026)
+
+**Estado: `useDraggable` promovido desde `playground/` a `src/react/useDraggable.ts`, exportado públicamente y validado otra vez en playground.**
+
+Quedó registrada la decisión de hoy:
+
+- el hook vive en `src/react/useDraggable.ts`;
+- compone `usePressable` puertas adentro sin modificarlo;
+- usa dos instancias independientes de `createRafSpringDriver`, una por eje `x` y otra por eje `y`;
+- en pruebas manuales no se observó desfase perceptible entre ambos ejes pese a correr como dos drivers separados;
+- expone dos modos configurables:
+  - `return`: rubber band, vuelve a la posición original al soltar;
+  - `settle`: se asienta en la posición donde fue soltado;
+- la velocidad de salida se calcula con un buffer circular interno de 4 muestras de posición y timestamp;
+- ese buffer y la utilidad de velocidad quedan encapsulados dentro del mismo archivo, sin extracción a `core`.
+
+Decisión explícita de alcance: la utilidad de velocidad no se promueve a `core` hasta que exista un segundo consumidor real. El ejemplo concreto dejado abierto para reevaluar esa extracción es que más adelante los pilares de tracking de puntero o de observación de scroll necesiten compartir un cálculo de velocidad con la misma semántica.
+
+### Graduación de `SvgStrokePresence` desde playground a API real (sesión del 23 de julio de 2026)
+
+**Estado: `SvgStrokePresence` promovido desde `playground/` a `src/react/SvgStrokePresence.tsx`, exportado públicamente y validado otra vez desde el playground.**
+
+Quedó registrada la decisión de hoy:
+
+- el componente vive en `src/react/SvgStrokePresence.tsx`;
+- usa `Presence` puertas adentro sin modificarlo;
+- no envuelve directamente un nodo SVG porque `Presence` siempre intercala un wrapper `div`, y el `path` SVG vive adentro de ese wrapper;
+- el componente es agnóstico al trigger: solo reacciona a `show`, igual que `Presence`;
+- no sabe nada de scroll, hover ni mount; esa decisión queda del lado del consumidor;
+- cubre `Draw Path`, `Undraw` y `Stroke Reveal`;
+- `Stroke Reveal` quedó modelado como alias de `direction="draw"`, no como variante separada;
+- `draw` y `undraw` comparten una única fórmula de `stroke-dashoffset` en CSS, diferenciada por una custom property de signo, sin duplicar lógica entre direcciones;
+- `Trim Path` queda explícitamente fuera de este componente, pendiente para una sesión futura aparte, porque técnicamente no es un cambio de signo sino una lógica distinta de recorte sobre una porción intermedia del trazo;
+- Diego confirmó manualmente antes de graduarlo que los tres disparadores de prueba, `mount`, `scroll` y `hover`, se ven y funcionan correctamente.
+
+### Cierre general de la sesión del 23 de julio de 2026
+
+**Estado general de la sesión: quedaron cerrados dos pilares del roadmap de animaciones, el Pilar 5 (Gestos con inercia) y el Pilar 4 Familia A (`Draw Path`, `Undraw` y `Stroke Reveal`). Ambos arrancaron como spikes aislados en `playground/`, fueron validados a mano por Diego, y terminaron graduados a la librería real dentro de `src/react/`.**
+
+#### Alcance real de lo trabajado hoy
+
+Durante esta sesión no se tocaron los Pilares 2, 3 y 6. Esos pilares ya estaban completos de antes y siguen considerados terminados. El audit inicial sí encontró una aclaración importante respecto del documento original del roadmap: la supuesta utilidad compartida de velocidad basada en delta de posición sobre delta de tiempo, mencionada como posible pieza transversal entre los Pilares 2, 3 y 5, no existía como utilidad separada y reutilizable en el repo.
+
+Eso **no** implica que los Pilares 2 y 3 estuvieran incompletos. Ambos funcionan según lo esperado con sus implementaciones actuales. Lo que quedó sin resolver en su momento fue únicamente esa extracción como primitive compartida. Para el Pilar 5, la necesidad se resolvió con una implementación propia y encapsulada dentro de `useDraggable`, sin promoción a `core`, decisión ya documentada en la entrada específica de ese hook.
+
+#### Hallazgo técnico relevante del Pilar 4
+
+El audit previo del Pilar 4 confirmó un detalle estructural importante: `Presence` siempre renderiza un wrapper `div` y nunca envuelve directamente un nodo SVG. Sin embargo, eso no bloquea la técnica de dibujo de trazos. Se validó en spike que un `path` SVG puede vivir adentro de ese wrapper y consumir sin fricción las custom properties CSS escritas por `Presence` y `useSpring`, en particular `--spring-progress`. Ese hallazgo se convirtió en la base técnica para construir y luego graduar `SvgStrokePresence`.
+
+#### Inconsistencia menor detectada en la API pública
+
+Durante la graduación de `SvgStrokePresence` apareció un detalle no resuelto en esta sesión: `useScrollProgress` no está exportado desde el entry point público de la librería (`src/index.ts`), a diferencia de `useDraggable` y `SvgStrokePresence`, que sí quedaron exportados públicamente hoy. La librería y el playground siguen funcionando correctamente, pero queda una inconsistencia menor en la superficie pública de Bylgja, pendiente para revisar en una sesión futura.
+
+#### Pendientes explícitos fuera de alcance por decisión deliberada
+
+Quedaron fuera del alcance de esta sesión, por decisión explícita de Diego y no por una limitación técnica descubierta durante la implementación, los siguientes frentes:
+
+- `Trim Path`, dentro del Pilar 4 Familia A, queda para una sesión aparte porque técnicamente no es una inversión de signo del mismo modelo sino una lógica distinta de recorte sobre una porción intermedia del trazo.
+- Pilar 4 Familia B (`Shape Morph` y `Morph Path`) queda pausado hasta que exista material SVG diseñado específicamente para morphing. Ese trabajo de preparación de los archivos SVG lo hace Diego fuera de este repo, por lo que no correspondía empezar todavía la parte de interpolación en código.
+
+#### Contexto de uso ampliado para priorización futura
+
+Quedó también explicitado en esta sesión que el roadmap de Pilares de Bylgja no está pensado solo para las apps de Yggdrasil Suite. Diego lo está usando además como repertorio de efectos para construir plantillas de páginas web vendibles, enfocadas primero en portfolios de fotógrafos y arquitectos, y más adelante también en sitios simples como páginas de pizzerías barriales. Ese contexto sí influyó en decisiones concretas tomadas hoy, por ejemplo priorizar libertad de movimiento en dos ejes para `useDraggable` en vez de limitarlo a un eje, pensando en galerías y superficies de exploración libre más útiles para portfolios visuales.
+
+#### Estado general de Bylgja al cierre de la sesión
+
+Al cierre del 23 de julio de 2026, el estado consolidado del roadmap queda así:
+
+- Pilares completos: 0, 1, 2, 3, 5, 6 y 7.
+- Pilar 4 completo solo en su Familia A.
+- Pendientes explícitos: `Trim Path` y Pilar 4 Familia B.
+
+## 2026-07-21
+
+### Registro obligatorio de `@property` para loops CSS puros (sesión del 21 de julio de 2026)
+
+Quedó documentado el hallazgo específico del Pilar 7: si una animación CSS pura quiere usar una custom property numérica como primitiva intermedia, no alcanza con cambiar su valor dentro de un `@keyframes`. Para que el navegador la interpole de forma continua, la propiedad debe registrarse explícitamente con `@property` y `syntax: "<number>"`.
+
+Caso concreto validado en `src/loops/oscillate.css`:
+
+- `@property --loop-progress`
+- `syntax: "<number>"`
+- `inherits: true`
+- `initial-value: 0`
+
+Sin ese registro, el navegador trata la custom property como un valor opaco no interpolable. El resultado perceptual no es una oscilación continua sino saltos discretos entre estados, aunque el `@keyframes` vaya de `0` a `1`.
+
+Importa distinguir este caso del de `--spring-progress`. `--spring-progress` nunca tuvo este problema porque no depende de interpolación nativa de CSS: su valor lo escribe JavaScript directamente en cada frame desde el `raf-driver`, y el navegador solo consume el número ya resuelto en la propiedad final.
+
+### Cierre de migración y ajuste de firmas estrictas (sesión del 21 de julio de 2026)
+
+**Estado: migración de `useSpring` cerrada en todo el repo auditado; errores de `exactOptionalPropertyTypes` resueltos; validación cross-browser de `offset-path border-box` ampliada en Firefox/Zen, con Safari todavía pendiente.**
+
+#### Cierre de la migración de `useSpring`
+
+La migración previa de `useSpring` desde argumentos posicionales hacia un único objeto de opciones había quedado incompleta en dos archivos periféricos al núcleo:
+
+- `demo/src/App.tsx`
+- `tree-shake-check/src/all-exports.tsx`
+
+Ambos seguían usando la firma vieja:
+
+- `useSpring(targetValue, config, initialValue)`
+
+Quedaron corregidos a la forma actual:
+
+- `useSpring({ targetValue, config, initialValue })`
+
+La revisión dejó además confirmado que los demás callsites activos ya estaban en la forma nueva basada en `UseSpringOptions`.
+
+#### Resolución de `exactOptionalPropertyTypes`
+
+Durante la verificación del build aparecieron cuatro errores relacionados con propiedades opcionales materializadas como `undefined` en objetos de opciones:
+
+- `src/react/useSpring.ts`
+- `src/react/Presence.tsx`
+- `src/variants/pressable.ts`
+- `src/variants/selectedHighlight.ts`
+
+La resolución elegida fue introducir `core/object-utils.ts` con el helper `stripUndefined`, que:
+
+- recibe un objeto;
+- devuelve uno nuevo sin las claves cuyo valor sea `undefined`;
+- ajusta el tipo de retorno para que sea compatible con `exactOptionalPropertyTypes: true`.
+
+Aplicación concreta:
+
+- en `useSpring.ts`, para no pasar `startDelay` cuando no existe;
+- en `Presence.tsx`, `pressable.ts` y `selectedHighlight.ts`, para no pasar `onSettled` cuando es `undefined`.
+
+Resultado de la sesión: `npm run build` volvió a quedar en verde, y `npm run verify:package` siguió imprimiendo `Package exports OK`.
+
+#### Validación cross-browser de `offset-path`
+
+Quedó confirmada la compatibilidad del enfoque actual basado en `offset-path` con `border-box` en Firefox/Zen además de Chromium. Safari queda todavía pendiente de verificar, por lo que el pendiente abierto del vault se reduce específicamente a esa comprobación restante.
+
 ## 2026-07-20
 
 ### Cierre del Pilar 1 — propagación (sesión del 20 de julio de 2026)

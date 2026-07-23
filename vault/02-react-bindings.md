@@ -192,3 +192,114 @@ El denominador (`window.innerHeight + rect.height`) es el recorrido total del el
 - El `useEffect` se ejecuta cuando `threshold` cambia (dependencia `[threshold]`).
 - Sin referencias a opciones externas mutables dentro del efecto — todo lo necesario se captura en el closure o se lee del DOM en el momento del cálculo.
 
+## `useDraggable`
+
+### Ubicación y composición
+
+- Vive en `src/react/useDraggable.ts`.
+- Compone `usePressable` puertas adentro, sin modificar `pressable.ts`.
+- Mantiene encapsulada dentro del mismo archivo la utilidad de velocidad y el buffer circular de muestras; no existe hoy una extracción a `core/`.
+
+### Firma real actual
+
+```ts
+export interface DragVelocity {
+  x: number;
+  y: number;
+}
+
+export interface DragPosition {
+  x: number;
+  y: number;
+}
+
+export type DraggableBehavior = "return" | "settle";
+
+export interface UseDraggableOptions {
+  behavior: DraggableBehavior;
+  className?: string;
+  pressableSpringConfig?: SpringSolverConfig;
+  springConfig?: SpringSolverConfig;
+}
+
+export interface DraggableBinding<T extends HTMLElement = HTMLElement> {
+  className: string;
+  isDragging: boolean;
+  onMouseDown: MouseEventHandler<T>;
+  onMouseUp: MouseEventHandler<T>;
+  onPointerCancel: PointerEventHandler<T>;
+  onPointerDown: PointerEventHandler<T>;
+  onPointerUp: PointerEventHandler<T>;
+  position: DragPosition;
+  ref: MutableRefObject<T | null>;
+  releaseVelocity: DragVelocity;
+}
+
+export function useDraggable<T extends HTMLElement = HTMLElement>(
+  options: UseDraggableOptions,
+): DraggableBinding<T>
+```
+
+### Qué hace
+
+- Mientras el drag está activo, escucha `pointermove` global y guarda las últimas 4 muestras `{ x, y, timestamp }` en un buffer circular interno.
+- Al soltar, calcula la velocidad de salida usando la muestra más vieja y la más nueva del buffer. Si hay menos de 2 muestras, devuelve velocidad cero en ambos ejes.
+- Expone dos modos configurables:
+  - `return`: rubber band, vuelve al origen al soltar.
+  - `settle`: se asienta en la posición donde fue soltado.
+- Maneja ambos ejes en paralelo usando dos instancias independientes de `createRafSpringDriver`, una para `x` y otra para `y`.
+
+### Decisión explícita vigente
+
+- La utilidad de velocidad se mantiene encapsulada en `useDraggable.ts` y no se extrae a `core` hasta que aparezca un segundo consumidor real, por ejemplo si más adelante los pilares de puntero o scroll necesitan cálculo de velocidad compartido.
+
+## `SvgStrokePresence`
+
+### Ubicación y composición
+
+- Vive en `src/react/SvgStrokePresence.tsx`.
+- Usa `Presence` puertas adentro sin modificarlo.
+- `Presence` siempre intercala un wrapper `div`, así que `SvgStrokePresence` no envuelve directamente un nodo SVG; el `path` SVG vive adentro de ese wrapper y consume `--spring-progress` desde ahí.
+
+### Firma real actual
+
+```ts
+export type SvgStrokeDirection = "draw" | "undraw";
+
+export interface SvgStrokePresenceProps {
+  children?: ReactNode;
+  direction: SvgStrokeDirection;
+  path?: string;
+  pathClassName?: string;
+  pathLength?: number;
+  pathProps?: SVGProps<SVGPathElement>;
+  show: boolean;
+  springConfig?: SpringSolverConfig;
+  svgClassName?: string;
+  svgLabel?: string;
+  svgProps?: SVGProps<SVGSVGElement>;
+  viewBox: string;
+  wrapperClassName?: string;
+}
+
+export function SvgStrokePresence(
+  props: SvgStrokePresenceProps,
+): JSX.Element
+```
+
+### Qué hace
+
+- Es agnóstico al trigger: solo reacciona a la prop `show`, igual que `Presence`.
+- No sabe nada de scroll, hover ni mount; esa decisión queda del lado del consumidor.
+- Cubre `Draw Path`, `Undraw` y `Stroke Reveal`.
+- `Stroke Reveal` quedó modelado como alias de `direction="draw"`, no como variante separada.
+
+### Dirección y fórmula compartida
+
+- `draw` y `undraw` comparten una única fórmula de `stroke-dashoffset` en CSS.
+- La diferencia se resuelve por una custom property de signo (`--svg-stroke-direction-sign`), evitando lógica duplicada.
+
+### Fuera de alcance
+
+- `Trim Path` queda explícitamente fuera de este componente y pendiente para una sesión futura aparte.
+- Motivo: no es un cambio de signo del mismo modelo, sino una lógica distinta de recorte sobre una porción intermedia del trazo.
