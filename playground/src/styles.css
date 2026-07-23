@@ -1146,3 +1146,189 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* ============================================================
+   Spike: SVG draw path
+   ============================================================ */
+
+.svg-draw-view {
+  width: min(900px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.svg-draw-intro {
+  max-width: 680px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.svg-draw-intro h1,
+.svg-draw-intro p {
+  margin: 0;
+}
+
+.svg-draw-intro h1 {
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  letter-spacing: -0.04em;
+}
+
+.svg-draw-intro p {
+  color: #9da3b5;
+  line-height: 1.6;
+}
+
+.svg-draw-eyebrow {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #61dafb;
+}
+
+.svg-draw-stage {
+  width: min(920px, 100%);
+  min-height: 340px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  border-radius: 28px;
+  border: 1px solid #24304a;
+  background:
+    radial-gradient(circle at center, rgba(56, 189, 248, 0.14), transparent 55%),
+    linear-gradient(180deg, #101522, #0a0d15);
+}
+
+.svg-draw-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.svg-draw-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: 24px;
+  border: 1px solid #24304a;
+  background:
+    radial-gradient(circle at top, rgba(97, 218, 251, 0.08), transparent 45%),
+    linear-gradient(180deg, #121722, #0d1018);
+}
+
+.svg-draw-card--scroll {
+  width: min(920px, 100%);
+}
+
+.svg-draw-card__header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.svg-draw-card__header h2,
+.svg-draw-card__header p {
+  margin: 0;
+}
+
+.svg-draw-card__header h2 {
+  color: #f2f6ff;
+}
+
+.svg-draw-card__header p {
+  color: #9da3b5;
+  line-height: 1.55;
+}
+
+.svg-draw-card__eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: #8bdcff;
+}
+
+.svg-draw-demo-stage {
+  min-height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  border-radius: 20px;
+  border: 1px solid #253144;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent),
+    radial-gradient(circle at center, rgba(56, 189, 248, 0.08), transparent 60%),
+    #0b0e14;
+}
+
+.svg-draw-demo-stage--hover {
+  position: relative;
+  cursor: crosshair;
+}
+
+.svg-draw-demo-stage--scroll {
+  min-height: 300px;
+}
+
+.svg-draw-demo-presence {
+  width: min(560px, 100%);
+}
+
+.svg-stroke-presence {
+  width: min(560px, 100%);
+}
+
+.svg-stroke-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.svg-stroke-path {
+  fill: none;
+  stroke: #8bdcff;
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: var(--svg-path-length, 100);
+  stroke-dashoffset: calc(
+    (
+      0.5 +
+      (var(--spring-progress, 0) - 0.5) * var(--svg-stroke-direction-sign, -1)
+    ) * var(--svg-path-length, 100)
+  );
+  filter: drop-shadow(0 0 12px rgba(97, 218, 251, 0.4));
+}
+
+.svg-draw-hover-note {
+  position: absolute;
+  left: 1rem;
+  bottom: 1rem;
+  margin: 0;
+  font-size: 0.8rem;
+  color: #9da3b5;
+}
+
+.svg-draw-scroll-spacer {
+  min-height: 48vh;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  color: #607089;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 900px) {
+  .svg-draw-grid {
+    grid-template-columns: 1fr;
+  }
+}

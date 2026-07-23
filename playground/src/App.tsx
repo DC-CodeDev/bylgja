@@ -23,6 +23,7 @@ import { LoopPresetsView } from "./LoopPresetsView.js";
 import { FlipLayoutView } from "./FlipLayoutView.js";
 import { SharedElementView } from "./SharedElementView.js";
 import { DraggableInertiaView } from "./DraggableInertiaView.js";
+import { SvgDrawPathView } from "./SvgDrawPathView.js";
 import "./styles.css";
 
 /**
@@ -50,7 +51,8 @@ type PlaygroundView =
   | "loops"
   | "flip-layout"
   | "shared-element"
-  | "draggable-inertia";
+  | "draggable-inertia"
+  | "svg-draw-path";
 
 const SPRING_CONFIGS: Record<SpringConfigKey, SpringSolverConfig> = {
   "snappy": SPRING_SNAPPY,
@@ -71,6 +73,7 @@ function getInitialView(): PlaygroundView {
     case "flip-layout":
     case "shared-element":
     case "draggable-inertia":
+    case "svg-draw-path":
       return requestedView;
     default:
       return "offset-path";
@@ -216,6 +219,13 @@ export function App() {
           >
             Draggable Inertia
           </button>
+          <button
+            className={`toggle-btn${view === "svg-draw-path" ? " toggle-btn--active" : ""}`}
+            type="button"
+            onClick={() => setView("svg-draw-path")}
+          >
+            SVG Draw Path
+          </button>
         </div>
       </div>
 
@@ -250,6 +260,8 @@ export function App() {
         <SharedElementView />
       ) : view === "draggable-inertia" ? (
         <DraggableInertiaView />
+      ) : view === "svg-draw-path" ? (
+        <SvgDrawPathView />
       ) : (
         <ScrollRevealView />
       )}

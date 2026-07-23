@@ -30,6 +30,11 @@ export {
   type DragVelocity,
   type UseDraggableOptions,
 } from "./react/useDraggable.js";
+export {
+  SvgStrokePresence,
+  type SvgStrokeDirection,
+  type SvgStrokePresenceProps,
+} from "./react/SvgStrokePresence.js";
 export { useSpring } from "./react/useSpring.js";
 export {
   useFade,
