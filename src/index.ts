@@ -22,6 +22,14 @@ export {
 } from "./react/useBreakpoint.js";
 export { useFlip } from "./react/useFlip.js";
 export { useSharedElementFlip } from "./react/useSharedElementFlip.js";
+export {
+  useDraggable,
+  type DraggableBehavior,
+  type DraggableBinding,
+  type DragPosition,
+  type DragVelocity,
+  type UseDraggableOptions,
+} from "./react/useDraggable.js";
 export { useSpring } from "./react/useSpring.js";
 export {
   useFade,

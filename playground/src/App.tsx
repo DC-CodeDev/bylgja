@@ -22,6 +22,7 @@ import { ScrollRevealView } from "./ScrollRevealView.js";
 import { LoopPresetsView } from "./LoopPresetsView.js";
 import { FlipLayoutView } from "./FlipLayoutView.js";
 import { SharedElementView } from "./SharedElementView.js";
+import { DraggableInertiaView } from "./DraggableInertiaView.js";
 import "./styles.css";
 
 /**
@@ -48,7 +49,8 @@ type PlaygroundView =
   | "scroll-reveal"
   | "loops"
   | "flip-layout"
-  | "shared-element";
+  | "shared-element"
+  | "draggable-inertia";
 
 const SPRING_CONFIGS: Record<SpringConfigKey, SpringSolverConfig> = {
   "snappy": SPRING_SNAPPY,
@@ -68,6 +70,7 @@ function getInitialView(): PlaygroundView {
     case "loops":
     case "flip-layout":
     case "shared-element":
+    case "draggable-inertia":
       return requestedView;
     default:
       return "offset-path";
@@ -206,6 +209,13 @@ export function App() {
           >
             Shared Element
           </button>
+          <button
+            className={`toggle-btn${view === "draggable-inertia" ? " toggle-btn--active" : ""}`}
+            type="button"
+            onClick={() => setView("draggable-inertia")}
+          >
+            Draggable Inertia
+          </button>
         </div>
       </div>
 
@@ -238,6 +248,8 @@ export function App() {
         <FlipLayoutView />
       ) : view === "shared-element" ? (
         <SharedElementView />
+      ) : view === "draggable-inertia" ? (
+        <DraggableInertiaView />
       ) : (
         <ScrollRevealView />
       )}
