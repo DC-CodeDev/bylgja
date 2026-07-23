@@ -9,6 +9,8 @@ for (const name of ["Tooltip", "useTooltip"]) {
 
 const cssUrl = import.meta.resolve("bylgja/variants/tooltip.css");
 await access(new URL(cssUrl));
+const timingCssUrl = import.meta.resolve("bylgja/tokens/timing.css");
+await access(new URL(timingCssUrl));
 
 const declarations = await readFile(new URL("../dist/index.d.ts", import.meta.url), "utf8");
 for (const name of ["Tooltip", "useTooltip", "TooltipPlacement", "UseTooltipOptions"]) {

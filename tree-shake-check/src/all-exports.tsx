@@ -14,7 +14,11 @@ import {
 } from "bylgja";
 
 export function AllExportsExample() {
-  const springRef = useSpring<HTMLDivElement>(1, SPRING_GENTLE, 0);
+  const springRef = useSpring<HTMLDivElement>({
+    targetValue: 1,
+    config: SPRING_GENTLE,
+    initialValue: 0,
+  });
   const fade = useFade({ show: true });
   const fadeScale = useFadeScale({ show: true });
   const modalBackdrop = useModalBackdrop({ show: true });

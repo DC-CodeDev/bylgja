@@ -1,0 +1,1 @@
+{"version":3,"file":"useScrollProgress.d.ts","sourceRoot":"","sources":["../../src/react/useScrollProgress.ts"],"names":[],"mappings":"AACA,OAAO,KAAK,EAAE,gBAAgB,EAAE,MAAM,OAAO,CAAC;AAE9C,MAAM,WAAW,wBAAwB;IACvC;;;;OAIG;IACH,SAAS,CAAC,EAAE,MAAM,CAAC;CACpB;AAOD,wBAAgB,iBAAiB,CAAC,CAAC,SAAS,WAAW,GAAG,WAAW,EACnE,OAAO,CAAC,EAAE,wBAAwB,GACjC,gBAAgB,CAAC,CAAC,GAAG,IAAI,CAAC,CA8E5B"}

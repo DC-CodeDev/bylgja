@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type HTMLAttributes, type ReactNode } from "react";
 import type { MutableRefObject } from "react";
+import { stripUndefined } from "../core/object-utils.js";
 import type { SpringSolverConfig } from "../core/spring-solver.js";
 import { useSpring } from "./useSpring.js";
 
@@ -31,12 +32,14 @@ function PresenceBody({
   targetValue,
   ...divProps
 }: PresenceBodyProps) {
-  const springRef: MutableRefObject<HTMLDivElement | null> = useSpring<HTMLDivElement>({
-    config: springConfig,
-    initialValue,
-    onSettled,
-    targetValue: show ? ENTRY_TARGET : targetValue,
-  });
+  const springRef: MutableRefObject<HTMLDivElement | null> = useSpring<HTMLDivElement>(
+    stripUndefined({
+      config: springConfig,
+      initialValue,
+      onSettled,
+      targetValue: show ? ENTRY_TARGET : targetValue,
+    }),
+  );
 
   return (
     <div ref={springRef} {...divProps}>

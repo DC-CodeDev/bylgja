@@ -4,6 +4,7 @@ import {
   createRafSpringDriver,
   type RafSpringDriver,
 } from "../core/raf-driver.js";
+import { stripUndefined } from "../core/object-utils.js";
 import type { SpringSolverConfig } from "../core/spring-solver.js";
 import { getReducedMotionPreference } from "../a11y/reducedMotion.js";
 
@@ -80,12 +81,14 @@ export function useSpring<T extends HTMLElement = HTMLElement>(
 
     reducedMotionAppliedTargetRef.current = null;
 
-    const driver = createRafSpringDriver({
-      initialValue: resolvedInitialValue,
-      startDelay,
-      targetValue,
-      ...config,
-    });
+    const driver = createRafSpringDriver(
+      stripUndefined({
+        initialValue: resolvedInitialValue,
+        startDelay,
+        targetValue,
+        ...config,
+      }),
+    );
 
     driverRef.current = driver;
 

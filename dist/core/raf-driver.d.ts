@@ -4,6 +4,7 @@ export interface RafSpringDriverOptions extends SpringSolverConfig {
     targetValue: number;
     initialVelocity?: number;
     maxDeltaTime?: number;
+    startDelay?: number;
 }
 export type RafSpringSubscriber = (snapshot: SpringSnapshot) => void;
 export interface RafSpringDriver {

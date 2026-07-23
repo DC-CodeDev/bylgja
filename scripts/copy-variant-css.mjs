@@ -7,6 +7,10 @@ const cssDirectories = [
     outputDirectory: new URL("../dist/variants/", import.meta.url),
   },
   {
+    sourceDirectory: new URL("../src/loops/", import.meta.url),
+    outputDirectory: new URL("../dist/loops/", import.meta.url),
+  },
+  {
     sourceDirectory: new URL("../src/tokens/", import.meta.url),
     outputDirectory: new URL("../dist/tokens/", import.meta.url),
   },

@@ -28,11 +28,11 @@ const files = [
 function SpringDemo() {
   const [right, setRight] = useState(false);
   const [tokenName, setTokenName] = useState<SpringTokenName>("gentle");
-  const springRef = useSpring<HTMLDivElement>(
-    right ? 1 : 0,
-    springTokens[tokenName],
-    right ? 1 : 0,
-  );
+  const springRef = useSpring<HTMLDivElement>({
+    targetValue: right ? 1 : 0,
+    config: springTokens[tokenName],
+    initialValue: right ? 1 : 0,
+  });
 
   return (
     <section className="demo-section">

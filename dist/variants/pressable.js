@@ -1,4 +1,5 @@
 import { useEffect, useState, } from "react";
+import { stripUndefined } from "../core/object-utils.js";
 import { useSpring } from "../react/useSpring.js";
 import { SPRING_SNAPPY } from "../tokens/springs.js";
 export const PRESSABLE_CLASS_NAME = "bylgja-pressable";
@@ -7,7 +8,12 @@ function joinClassNames(...classNames) {
 }
 export function usePressable({ className, onSettled, springConfig = SPRING_SNAPPY, } = {}) {
     const [isPressed, setIsPressed] = useState(false);
-    const ref = useSpring(isPressed ? 1 : 0, springConfig, 0, onSettled);
+    const ref = useSpring(stripUndefined({
+        config: springConfig,
+        initialValue: 0,
+        onSettled,
+        targetValue: isPressed ? 1 : 0,
+    }));
     const press = () => {
         setIsPressed(true);
     };

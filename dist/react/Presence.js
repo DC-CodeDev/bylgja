@@ -1,9 +1,15 @@
 import { jsx as _jsx } from "react/jsx-runtime";
 import { useEffect, useRef, useState } from "react";
+import { stripUndefined } from "../core/object-utils.js";
 import { useSpring } from "./useSpring.js";
 const ENTRY_TARGET = 1;
 function PresenceBody({ children, initialValue, onSettled, show, springConfig, targetValue, ...divProps }) {
-    const springRef = useSpring(show ? ENTRY_TARGET : targetValue, springConfig, initialValue, onSettled);
+    const springRef = useSpring(stripUndefined({
+        config: springConfig,
+        initialValue,
+        onSettled,
+        targetValue: show ? ENTRY_TARGET : targetValue,
+    }));
     return (_jsx("div", { ref: springRef, ...divProps, children: children }));
 }
 export function Presence({ children, show, exitConfig, exitTarget = 0, onSettled, ...divProps }) {

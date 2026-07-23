@@ -1,4 +1,5 @@
 import type { MutableRefObject } from "react";
+import { stripUndefined } from "../core/object-utils.js";
 import type { SpringSolverConfig } from "../core/spring-solver.js";
 import { useSpring } from "../react/useSpring.js";
 import { SPRING_GENTLE } from "../tokens/springs.js";
@@ -28,12 +29,14 @@ export function useSelectedHighlight<T extends HTMLElement = HTMLElement>({
   selected,
   springConfig = SPRING_GENTLE,
 }: UseSelectedHighlightOptions): SelectedHighlightBinding<T> {
-  const ref = useSpring<T>({
-    config: springConfig,
-    initialValue: selected ? 1 : 0,
-    onSettled,
-    targetValue: selected ? 1 : 0,
-  });
+  const ref = useSpring<T>(
+    stripUndefined({
+      config: springConfig,
+      initialValue: selected ? 1 : 0,
+      onSettled,
+      targetValue: selected ? 1 : 0,
+    }),
+  );
 
   return {
     className: joinClassNames(SELECTED_HIGHLIGHT_CLASS_NAME, className),

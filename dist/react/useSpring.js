@@ -1,8 +1,10 @@
 import { useEffect, useRef } from "react";
 import { createRafSpringDriver, } from "../core/raf-driver.js";
+import { stripUndefined } from "../core/object-utils.js";
 import { getReducedMotionPreference } from "../a11y/reducedMotion.js";
 const SPRING_PROGRESS_PROPERTY = "--spring-progress";
-export function useSpring(targetValue, config, initialValue, onSettled) {
+export function useSpring(options) {
+    const { config, initialValue, onSettled, startDelay, targetValue } = options;
     const elementRef = useRef(null);
     const driverRef = useRef(null);
     const onSettledRef = useRef(onSettled);
@@ -18,6 +20,7 @@ export function useSpring(targetValue, config, initialValue, onSettled) {
         config.timestep ?? "",
         config.velocityThreshold ?? "",
         config.positionThreshold ?? "",
+        startDelay ?? "",
     ].join(":");
     onSettledRef.current = onSettled;
     const scheduleReducedMotionSettled = () => {
@@ -50,11 +53,12 @@ export function useSpring(targetValue, config, initialValue, onSettled) {
             };
         }
         reducedMotionAppliedTargetRef.current = null;
-        const driver = createRafSpringDriver({
+        const driver = createRafSpringDriver(stripUndefined({
             initialValue: resolvedInitialValue,
+            startDelay,
             targetValue,
             ...config,
-        });
+        }));
         driverRef.current = driver;
         const unsubscribe = driver.subscribe((snapshot) => {
             const element = elementRef.current;

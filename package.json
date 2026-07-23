@@ -13,6 +13,8 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
+    "./loops/*.css": "./dist/loops/*.css",
+    "./tokens/*.css": "./dist/tokens/*.css",
     "./variants/*.css": "./dist/variants/*.css",
     "./variants/tooltip.css": "./dist/variants/tooltip.css",
     "./package.json": "./package.json"

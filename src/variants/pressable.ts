@@ -6,6 +6,7 @@ import {
   type PointerEventHandler,
 } from "react";
 import type { MutableRefObject } from "react";
+import { stripUndefined } from "../core/object-utils.js";
 import type { SpringSolverConfig } from "../core/spring-solver.js";
 import { useSpring } from "../react/useSpring.js";
 import { SPRING_SNAPPY } from "../tokens/springs.js";
@@ -38,12 +39,14 @@ export function usePressable<T extends HTMLElement = HTMLElement>({
   springConfig = SPRING_SNAPPY,
 }: UsePressableOptions = {}): PressableBinding<T> {
   const [isPressed, setIsPressed] = useState(false);
-  const ref = useSpring<T>({
-    config: springConfig,
-    initialValue: 0,
-    onSettled,
-    targetValue: isPressed ? 1 : 0,
-  });
+  const ref = useSpring<T>(
+    stripUndefined({
+      config: springConfig,
+      initialValue: 0,
+      onSettled,
+      targetValue: isPressed ? 1 : 0,
+    }),
+  );
 
   const press = (): void => {
     setIsPressed(true);

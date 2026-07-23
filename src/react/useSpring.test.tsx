@@ -50,8 +50,8 @@ function SpringTarget({
 }) {
   const ref = useSpring<HTMLDivElement>({
     config,
-    initialValue,
     targetValue: target,
+    ...(initialValue === undefined ? {} : { initialValue }),
   });
 
   return <div data-testid="spring-target" ref={ref} />;
