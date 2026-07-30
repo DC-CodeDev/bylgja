@@ -1,3 +1,3 @@
 import type { SpringSolverConfig } from "../core/spring-solver.js";
-export declare function useOverlapTrigger(config: SpringSolverConfig, active: boolean, threshold: number, onTrigger: () => void): void;
+export declare function useOverlapTrigger(config: SpringSolverConfig, active: boolean, threshold: number, onTrigger: () => void, minDelayMs?: number): void;
 //# sourceMappingURL=useOverlapTrigger.d.ts.map

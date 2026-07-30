@@ -118,9 +118,17 @@ La necesidad apareció en más de un proyecto de la Suite antes de ser construid
 
 El hook arranca un `RafSpringDriver` interno que **no controla ningún elemento del DOM**. Su única función es correr la física del spring con la misma configuración que la transición CSS real que se está monitoreando. El driver simula un recorrido de `0` a `1` — el mismo rango normalizado que usa `--spring-progress` en las transiciones de Bylgja.
 
-Al suscribirse al driver, el hook observa `snapshot.value` en cada frame. Cuando ese valor supera `threshold` (por ejemplo `0.4` para disparar al 40 % del recorrido), llama a `onTrigger` una sola vez y se desuscribe. A partir de ahí el driver ya no corre.
+Al suscribirse al driver, el hook observa `snapshot.value` en cada frame. Cuando ese valor supera `threshold` (por ejemplo `0.4` para disparar al 40 % del recorrido), esa condición queda registrada. El trigger se dispara cuando **ambas** condiciones están satisfechas: el threshold cruzado Y `minDelayMs` transcurridos desde que `active` pasó a `true`. Gana el que tarde más.
 
-Cuando `active` pasa a `false`, el cleanup del `useEffect` detiene el driver y cancela la suscripción si el trigger aún no se había disparado.
+Cuando `active` pasa a `false`, el cleanup del `useEffect` detiene el driver, cancela la suscripción y limpia el timer si el trigger aún no se había disparado.
+
+### Por qué existe minDelayMs: el caso real que lo originó
+
+El threshold porcentual solo no es suficiente para garantizar separación perceptual entre etapas. El mismo porcentaje representa tiempos absolutos muy distintos según qué tan rápido sea el spring monitoreado.
+
+**Caso concreto:** 45% de un spring de ~520ms equivale a ≈117ms absolutos. Ese valor cae por debajo del umbral perceptual humano (~100ms), haciendo que dos etapas se vean simultáneas aunque el trigger dispare "correctamente" según el porcentaje configurado.
+
+`minDelayMs` (default `150`) resuelve esto imponiendo un piso absoluto. El trigger nunca puede dispararse antes de ese mínimo desde la activación, independientemente de cuán rápido cruce el spring el threshold porcentual. Para springs lentos donde el threshold llega después del piso, el comportamiento es idéntico al anterior.
 
 ### Advertencia: acople manual entre config y duración CSS
 
@@ -136,13 +144,15 @@ function useOverlapTrigger(
   active: boolean,
   threshold: number,
   onTrigger: () => void,
+  minDelayMs?: number,
 ): void
 ```
 
 - `config` — config del spring que espeja la transición CSS monitorizada
 - `active` — cuando pasa a `true` el driver shadow arranca; cuando vuelve a `false` se cancela
-- `threshold` — valor entre `0` y `1`; el trigger se dispara cuando `snapshot.value` cruza este umbral
+- `threshold` — valor entre `0` y `1`; condición de porcentaje; el trigger espera que `snapshot.value` cruce este umbral
 - `onTrigger` — callback de un solo disparo; se llama máximo una vez por activación
+- `minDelayMs` — piso absoluto en milisegundos desde la activación (default `150`); el trigger nunca dispara antes de este tiempo aunque el threshold ya haya sido cruzado
 
 ### API pública
 
