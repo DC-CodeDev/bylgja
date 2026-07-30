@@ -37,6 +37,15 @@ export {
 } from "./react/SvgStrokePresence.js";
 export { useSpring } from "./react/useSpring.js";
 export {
+  useScrollProgress,
+  type UseScrollProgressOptions,
+} from "./react/useScrollProgress.js";
+export {
+  SmoothScrollProvider,
+  useSmoothScrollProgress,
+  type SmoothScrollProviderProps,
+} from "./react/SmoothScrollProvider.js";
+export {
   useFade,
   type FadeBinding,
   type FadeState,
