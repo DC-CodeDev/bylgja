@@ -36,6 +36,7 @@ export {
   type SvgStrokePresenceProps,
 } from "./react/SvgStrokePresence.js";
 export { useSpring } from "./react/useSpring.js";
+export { useOverlapTrigger } from "./react/useOverlapTrigger.js";
 export {
   useScrollProgress,
   type UseScrollProgressOptions,

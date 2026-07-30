@@ -98,3 +98,54 @@ Exportado desde `src/index.ts`:
 - `SmoothScrollProvider` — componente provider, envuelve la página completa
 - `useSmoothScrollProgress` — hook que devuelve el progreso de scroll normalizado (0–1) via Context; requiere estar dentro del árbol del provider
 - `SmoothScrollProviderProps` — tipo de las props del provider (`children`, `sensitivity?`)
+
+---
+
+## `useOverlapTrigger`
+
+- Archivo: `src/react/useOverlapTrigger.ts`
+- API pública: `useOverlapTrigger`
+
+### Problema que resuelve
+
+Al encadenar dos elementos animados en secuencia, la opción más sencilla es esperar al settle completo del primero y entonces disparar el segundo. Eso produce una pausa perceptible: el usuario ve el primer elemento quieto antes de que el segundo arranque.
+
+`useOverlapTrigger` resuelve esto permitiendo que el segundo elemento arranque cuando el primero ha completado un porcentaje configurable de su recorrido, no cuando ha terminado del todo. El overlap resultante hace que la transición compuesta se perciba como fluida y continua, en vez de dos movimientos separados.
+
+La necesidad apareció en más de un proyecto de la Suite antes de ser construida, lo que la califica como primitiva de la librería en lugar de utilidad local de un consumidor.
+
+### Mecanismo: driver shadow
+
+El hook arranca un `RafSpringDriver` interno que **no controla ningún elemento del DOM**. Su única función es correr la física del spring con la misma configuración que la transición CSS real que se está monitoreando. El driver simula un recorrido de `0` a `1` — el mismo rango normalizado que usa `--spring-progress` en las transiciones de Bylgja.
+
+Al suscribirse al driver, el hook observa `snapshot.value` en cada frame. Cuando ese valor supera `threshold` (por ejemplo `0.4` para disparar al 40 % del recorrido), llama a `onTrigger` una sola vez y se desuscribe. A partir de ahí el driver ya no corre.
+
+Cuando `active` pasa a `false`, el cleanup del `useEffect` detiene el driver y cancela la suscripción si el trigger aún no se había disparado.
+
+### Advertencia: acople manual entre config y duración CSS
+
+El `SpringSolverConfig` que se pasa a `useOverlapTrigger` debe coincidir exactamente con el config que usa la transición CSS real del elemento que se está monitoreando. El driver shadow no tiene acceso al elemento ni a su CSS — confiar en que corren en paralelo con el mismo config es lo que garantiza que el porcentaje de progreso representado por `threshold` corresponda al porcentaje visual real.
+
+Si se ajusta la duración o la física de la transición visual, el config del driver shadow debe actualizarse en paralelo. Si se desfasan, el trigger se disparará antes o después de lo que el consumidor espera visualmente, produciendo solapamientos incorrectos.
+
+### Firma
+
+```ts
+function useOverlapTrigger(
+  config: SpringSolverConfig,
+  active: boolean,
+  threshold: number,
+  onTrigger: () => void,
+): void
+```
+
+- `config` — config del spring que espeja la transición CSS monitorizada
+- `active` — cuando pasa a `true` el driver shadow arranca; cuando vuelve a `false` se cancela
+- `threshold` — valor entre `0` y `1`; el trigger se dispara cuando `snapshot.value` cruza este umbral
+- `onTrigger` — callback de un solo disparo; se llama máximo una vez por activación
+
+### API pública
+
+Exportado desde `src/index.ts`:
+
+- `useOverlapTrigger` — hook (no tiene tipos propios; usa `SpringSolverConfig` ya exportado)
