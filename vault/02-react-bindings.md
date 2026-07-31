@@ -303,3 +303,60 @@ export function SvgStrokePresence(
 
 - `Trim Path` queda explícitamente fuera de este componente y pendiente para una sesión futura aparte.
 - Motivo: no es un cambio de signo del mismo modelo, sino una lógica distinta de recorte sobre una porción intermedia del trazo.
+
+---
+
+## `useLerpFollow`
+
+Introducido en commit `54a3a45`. Archivo: `src/react/useLerpFollow.ts`.
+
+### Firma real
+
+```ts
+export interface UseLerpFollowOptions {
+  factor?: number;   // factor de interpolación por frame [0, 1]. Default: 0.1
+  active?: boolean;  // si false, detiene el RAF pero mantiene cursor target vivo
+}
+
+export function useLerpFollow<T extends HTMLElement = HTMLElement>(
+  options?: UseLerpFollowOptions,
+): RefObject<T | null>
+```
+
+### Qué hace
+
+- Devuelve un `RefObject` para asociarlo a un elemento `position:fixed; top:0; left:0`.
+- Escucha `mousemove` en `document` y mantiene `targetRef` siempre actualizado, incluso cuando `active=false`.
+- En cada RAF frame: `current += (target - current) * factor`. Escribe `transform: translate3d(x, y, 0)` directamente sobre el elemento. No usa `--spring-progress` ni ningún custom property.
+- Para el RAF cuando `|dx| < 0.15px && |dy| < 0.15px` (epsilon de asentamiento), para no correr indefinidamente.
+- **No** usa `createRafSpringDriver`. Tiene su propio `requestAnimationFrame` loop independiente.
+
+### Comportamiento de `active`
+
+- Cuando `active` pasa de `false` a `true`: hace snap de `current = target` antes de arrancar el RAF. Esto garantiza que el elemento aparece en la posición real del cursor (sin salto desde una posición vieja stale).
+- Cuando `active` pasa a `false`: cancela el RAF. El listener de `mousemove` sigue activo.
+- El loop de RAF arranca solo cuando `active=true` Y hay movimiento de mouse. Se detiene solo cuando el cursor deja de moverse (convergencia al epsilon).
+
+### Por qué no comparte RAF con `createRafSpringDriver`
+
+`createRafSpringDriver` es específico de spring: sus suscriptores reciben `SpringSnapshot`, su ciclo de vida termina cuando `solver.isSettled()`. No hay mecanismo para enchufar lógica de lerp como consumidor. Crear un driver genérico compartido sería una reescritura de arquitectura mayor. Un RAF propio para un único elemento `position:fixed` activo es eficiente y limpio.
+
+### Uso típico (preview flotante con clip-path)
+
+```tsx
+// El elemento vive fuera del SmoothScrollProvider via createPortal
+const previewRef = useLerpFollow<HTMLDivElement>({ active: hoveredRow !== null, factor: 0.1 });
+
+createPortal(
+  <div ref={previewRef} style={{ position: 'fixed', top: 0, left: 0, pointerEvents: 'none' }}>
+    <div style={{ transform: 'translate(24px, -40px)', clipPath: hoveredRow !== null ? 'inset(0)' : 'inset(100% 0 0 0)' }}>
+      {/* preview content */}
+    </div>
+  </div>,
+  document.body
+)
+```
+
+### Restricción con SmoothScrollProvider
+
+El elemento asociado al ref **debe** ser un portal en `document.body` (fuera del árbol de SmoothScrollProvider). Si se renderiza dentro del `div` con `will-change:transform` del Provider, `position:fixed` se convierte en `containing-block` del Provider y los `clientX/clientY` del mouse ya no coinciden con la posición visual del elemento desplazado por scroll.
