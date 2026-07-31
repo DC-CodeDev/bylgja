@@ -306,6 +306,69 @@ export function SvgStrokePresence(
 
 ---
 
+## `useElementScrollProgress`
+
+Introducido en commit `1b83479`. Archivo: `src/react/useElementScrollProgress.ts`.
+
+### Firma real
+
+```ts
+export function useElementScrollProgress<T extends HTMLElement = HTMLElement>(): [
+  RefObject<T | null>,
+  number,
+]
+```
+
+### Qué hace
+
+Retorna un `[ref, progress]` donde `progress` es un `number` de 0 a 1 que mide cuánto entró el elemento al viewport:
+- **0** cuando el borde superior del elemento toca el borde inferior del viewport (empieza a asomar).
+- **1** cuando el borde superior del elemento toca el borde superior del viewport (el elemento ocupa la pantalla completa).
+
+La fórmula es: `clamp(0, 1, (viewportHeight - rect.top) / viewportHeight)`.
+
+### Diferencias clave con `useScrollProgress`
+
+| | `useScrollProgress` | `useElementScrollProgress` |
+|---|---|---|
+| Output | `MutableRefObject<T>` (escribe CSS vars en el DOM) | `[ref, number]` (React state) |
+| Fórmula denominador | `viewportHeight + rect.height` | `viewportHeight` |
+| Rango | 0 = empieza a entrar; 1 = terminó de salir | 0 = empieza a entrar; 1 = top en viewport top |
+| Re-renders | No (muta DOM directamente) | Sí (via useState) |
+| Uso | Animaciones CSS-driven | Interpolación de valores en JS (colores, transforms calculados en React) |
+
+### Performance
+
+Usa `IntersectionObserver` (`threshold: 0`) para activar/desactivar el scroll listener. Cuando el elemento está completamente fuera del viewport, no corre ningún cálculo.
+
+Cuando hay `SmoothScrollProvider` en el árbol, se suscribe a `SmoothScrollContext` y recalcula en cada frame animado del provider (igual que `useScrollProgress`).
+
+### Uso típico (interpolación de color en scroll)
+
+```tsx
+// Ease-in (t²) aplicado a ambos canales evita convergencia al gris medio
+// que ocurriría con interpolación lineal cuando bg y text son complementarios.
+const [sectionRef, progress] = useElementScrollProgress<HTMLElement>();
+
+useLayoutEffect(() => {
+  const el = sectionRef.current;
+  if (!el) return;
+  const t = progress * progress; // ease-in
+  el.style.setProperty('--footer-bg', lerpColor(BG_FROM, BG_TO, t));
+  el.style.setProperty('--footer-text', lerpColor(TEXT_FROM, TEXT_TO, t));
+}, [progress]);
+
+return <section ref={sectionRef} />;
+```
+
+### Nota de contraste (interpolación bg + text complementarios)
+
+Con interpolación **lineal** de colores complementarios (bg = A→B, text = B→A): a `t=0.5` ambos convergen al mismo gris medio → contraste 1:1.
+
+Con `t² ease-in` para ambos canales: a `t=0.5` los dos aplican sólo `t²=0.25` de progreso → bg sigue siendo mayormente claro, text sigue siendo mayormente oscuro → contraste ~4.52:1 (justo en el umbral AA para texto normal). La "fase de cruce" se empuja hacia el final de la transición donde ambos están casi en su valor final y el contraste vuelve a ser alto.
+
+---
+
 ## `useLerpFollow`
 
 Introducido en commit `54a3a45`. Archivo: `src/react/useLerpFollow.ts`.
