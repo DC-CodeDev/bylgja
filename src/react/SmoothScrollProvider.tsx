@@ -37,11 +37,13 @@ export function useSmoothScrollProgress(): number {
 
 export interface SmoothScrollProviderProps {
   children: ReactNode;
+  fixedContent?: ReactNode;
   sensitivity?: number;
 }
 
 export function SmoothScrollProvider({
   children,
+  fixedContent,
   sensitivity = DEFAULT_SENSITIVITY,
 }: SmoothScrollProviderProps) {
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -136,6 +138,7 @@ export function SmoothScrollProvider({
       >
         {children}
       </div>
+      {fixedContent}
       <div aria-hidden="true" ref={spacerRef} style={{ pointerEvents: "none" }} />
     </SmoothScrollContext.Provider>
   );
