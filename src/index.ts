@@ -104,3 +104,4 @@ export {
   useLerpFollow,
   type UseLerpFollowOptions,
 } from "./react/useLerpFollow.js";
+export { useElementScrollProgress } from "./react/useElementScrollProgress.js";

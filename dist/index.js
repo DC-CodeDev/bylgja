@@ -23,4 +23,5 @@ export { TOOLTIP_CLASS_NAME, Tooltip, useTooltip, } from "./variants/tooltip.js"
 export { getReducedMotionPreference, useReducedMotion } from "./a11y/reducedMotion.js";
 export { useInView, } from "./react/useInView.js";
 export { useLerpFollow, } from "./react/useLerpFollow.js";
+export { useElementScrollProgress } from "./react/useElementScrollProgress.js";
 //# sourceMappingURL=index.js.map
