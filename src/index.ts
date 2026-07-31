@@ -79,6 +79,12 @@ export {
   type UseSelectedHighlightOptions,
 } from "./variants/selectedHighlight.js";
 export {
+  useNavSlide,
+  NAV_SLIDE_CLASS_NAME,
+  type NavSlideBinding,
+  type UseNavSlideOptions,
+} from "./variants/navSlide.js";
+export {
   TOOLTIP_CLASS_NAME,
   Tooltip,
   useTooltip,
