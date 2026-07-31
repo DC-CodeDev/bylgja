@@ -48,7 +48,7 @@
     "copy:variant-css": "node ./scripts/copy-variant-css.mjs",
     "demo:build": "vite build --config demo/vite.config.ts",
     "demo:dev": "vite --config demo/vite.config.ts",
-    "prepare": "npm run build",
+    "prepare": "echo 'prebuilt dist committed to git — no build step needed on install'",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "verify:package": "node ./scripts/verify-package.mjs"
