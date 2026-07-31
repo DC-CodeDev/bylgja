@@ -100,3 +100,7 @@ export {
   useInView,
   type UseInViewOptions,
 } from "./react/useInView.js";
+export {
+  useLerpFollow,
+  type UseLerpFollowOptions,
+} from "./react/useLerpFollow.js";

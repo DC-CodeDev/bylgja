@@ -1,6 +1,6 @@
 # Variants
 
-Auditoría directa de `src/variants` al 19 de julio de 2026: existen siete variants reales y actuales.
+Auditoría directa de `src/variants` al 31 de julio de 2026: existen ocho variants reales y actuales.
 
 ## `fade`
 
@@ -251,6 +251,48 @@ interface TooltipProps extends UseTooltipOptions {
 ### Propósito
 
 - Primitive headless accesible para tooltip.
+
+## `navSlide`
+
+- Archivo: `src/variants/navSlide.ts` + `src/variants/navSlide.css`
+- Export principal: `useNavSlide(options: UseNavSlideOptions): NavSlideBinding`
+- Constante de clase: `NAV_SLIDE_CLASS_NAME = "bylgja-nav-slide"`
+- Commit de introducción: `afcd8e7`
+
+### API principal
+
+```ts
+interface UseNavSlideOptions {
+  show: boolean;
+  className?: string;
+  springConfig?: SpringSolverConfig;
+  exitTarget?: number;
+  onSettled?: () => void;
+}
+```
+
+```ts
+interface NavSlideBinding {
+  className: string;
+  render: (children: ReactNode) => ReactElement | null;
+  state: "visible" | "hidden";
+}
+```
+
+### CSS
+
+```css
+.bylgja-nav-slide {
+  transform: translateY(calc((1 - var(--spring-progress, 0)) * -100%));
+}
+```
+
+### Propósito
+
+- Variant para elementos que entran desde arriba (navbars fijos, banners deslizantes).
+- Usa `Presence` para mount/unmount — el elemento se desmonta cuando el spring se asienta en 0.
+- El CSS mapea `--spring-progress` (0→1) a `translateY(-100%→0)`.
+- **Sin `will-change` estático.** A diferencia de las otras variants, navSlide es un elemento de larga vida (visible durante toda la sesión de scroll activa). Declarar `will-change: transform` permanentemente crea un layer GPU separado que desalinea subpixels con `SmoothScrollProvider`, causando parpadeo en borders de 1px. Las otras variants son overlays temporales que se desmontan rápido — ahí el `will-change` es transitorio y aceptable.
 - Soporta modo controlado y no controlado.
 - Abre por foco o `pointerenter`, cierra por blur, `pointerleave` y `Escape`.
 - Ignora `pointerType === "touch"`.

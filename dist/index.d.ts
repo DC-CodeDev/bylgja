@@ -22,4 +22,5 @@ export { useNavSlide, NAV_SLIDE_CLASS_NAME, type NavSlideBinding, type UseNavSli
 export { TOOLTIP_CLASS_NAME, Tooltip, useTooltip, type TooltipBinding, type TooltipContentProps, type TooltipPlacement, type TooltipProps, type TooltipTriggerProps, type UseTooltipOptions, } from "./variants/tooltip.js";
 export { getReducedMotionPreference, useReducedMotion } from "./a11y/reducedMotion.js";
 export { useInView, type UseInViewOptions, } from "./react/useInView.js";
+export { useLerpFollow, type UseLerpFollowOptions, } from "./react/useLerpFollow.js";
 //# sourceMappingURL=index.d.ts.map
