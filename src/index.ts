@@ -90,3 +90,7 @@ export {
   type UseTooltipOptions,
 } from "./variants/tooltip.js";
 export { getReducedMotionPreference, useReducedMotion } from "./a11y/reducedMotion.js";
+export {
+  useInView,
+  type UseInViewOptions,
+} from "./react/useInView.js";
