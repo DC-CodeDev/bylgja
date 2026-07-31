@@ -17,7 +17,7 @@ export const SmoothScrollContext = createContext({
 export function useSmoothScrollProgress() {
     return useContext(SmoothScrollContext).scrollProgress;
 }
-export function SmoothScrollProvider({ children, sensitivity = DEFAULT_SENSITIVITY, }) {
+export function SmoothScrollProvider({ children, fixedContent, sensitivity = DEFAULT_SENSITIVITY, }) {
     const [scrollProgress, setScrollProgress] = useState(0);
     const contentRef = useRef(null);
     const spacerRef = useRef(null);
@@ -88,6 +88,6 @@ export function SmoothScrollProvider({ children, sensitivity = DEFAULT_SENSITIVI
                     left: 0,
                     width: "100%",
                     willChange: "transform",
-                }, children: children }), _jsx("div", { "aria-hidden": "true", ref: spacerRef, style: { pointerEvents: "none" } })] }));
+                }, children: children }), fixedContent, _jsx("div", { "aria-hidden": "true", ref: spacerRef, style: { pointerEvents: "none" } })] }));
 }
 //# sourceMappingURL=SmoothScrollProvider.js.map
