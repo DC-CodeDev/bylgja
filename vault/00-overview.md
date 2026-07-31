@@ -43,3 +43,19 @@ Bylgja es una librería de motion primitives para React, escrita en TypeScript, 
 - A11y: `getReducedMotionPreference`, `useReducedMotion`
 
 No existe export público actual de `FADE_QUICK`.
+
+## Índice del vault
+
+- [00-overview](00-overview.md) — descripción general, mapa de `src` y API pública auditada
+- [01-core](01-core.md) — spring solver y raf driver
+- [02-react-bindings](02-react-bindings.md) — hooks y componentes React
+- [03-tokens](03-tokens.md) — presets físicos y tokens CSS
+- [04-variants](04-variants.md) — variants listos para consumir
+- [05-build-and-packaging](05-build-and-packaging.md) — pipeline de build, exports y packaging
+- [06-decisiones-y-sesiones](06-decisiones-y-sesiones.md) — registro de sesiones y decisiones de diseño
+- [07-pendientes](07-pendientes.md) — backlog y trabajo pendiente
+- [08-loops](08-loops.md) — pilar de loops y oscilación
+- [09-layout-flip](09-layout-flip.md) — técnica FLIP para transiciones de layout
+- [10-shared-element](10-shared-element.md) — shared element transitions
+- [11-funciones-generales](11-funciones-generales.md) — utilidades y funciones transversales
+- [12-incidentes-y-lecciones](12-incidentes-y-lecciones.md) — post-mortems y reglas operativas derivadas
