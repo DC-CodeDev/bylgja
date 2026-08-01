@@ -41,9 +41,13 @@ export function SmoothScrollProvider({ children, fixedContent, sensitivity = DEF
             // Touch-primary device: let the browser handle scroll natively.
             // Still emit scrollProgress so dependent hooks (Navbar, Footer,
             // ThemeContext) keep receiving updates without any code changes.
+            // visualViewport.height is stable during Chrome Android's dynamic
+            // toolbar collapse/expand, unlike window.innerHeight which fluctuates
+            // on each scroll event and causes scrollProgress to jump.
+            const getStableViewportHeight = () => window.visualViewport ? window.visualViewport.height : window.innerHeight;
             const handleNativeScroll = () => {
-                const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-                setScrollProgress(maxScroll > 0 ? window.scrollY / maxScroll : 0);
+                const maxScroll = document.documentElement.scrollHeight - getStableViewportHeight();
+                setScrollProgress(maxScroll > 0 ? Math.max(0, Math.min(1, window.scrollY / maxScroll)) : 0);
             };
             window.addEventListener("scroll", handleNativeScroll, { passive: true });
             return () => window.removeEventListener("scroll", handleNativeScroll);
