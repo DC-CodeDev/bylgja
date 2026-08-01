@@ -1,4 +1,4 @@
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { jsxs as _jsxs, jsx as _jsx } from "react/jsx-runtime";
 import { createContext, useContext, useEffect, useRef, useState, } from "react";
 import { createRafSpringDriver } from "../core/raf-driver.js";
 import { getReducedMotionPreference } from "../a11y/reducedMotion.js";
@@ -19,6 +19,9 @@ export function useSmoothScrollProgress() {
 }
 export function SmoothScrollProvider({ children, fixedContent, sensitivity = DEFAULT_SENSITIVITY, }) {
     const [scrollProgress, setScrollProgress] = useState(0);
+    // Always false on first render (SSR-safe). Detected client-side after mount
+    // so that server and client produce the same JSX tree on hydration.
+    const [isTouchPrimary, setIsTouchPrimary] = useState(false);
     const contentRef = useRef(null);
     const spacerRef = useRef(null);
     const scrollTargetRef = useRef(0);
@@ -27,10 +30,25 @@ export function SmoothScrollProvider({ children, fixedContent, sensitivity = DEF
     const sensitivityRef = useRef(sensitivity);
     sensitivityRef.current = sensitivity;
     useEffect(() => {
+        setIsTouchPrimary(window.matchMedia("(pointer: coarse)").matches);
+    }, []);
+    useEffect(() => {
         if (getReducedMotionPreference()) {
             // Reduced-motion: leave native scroll untouched, mount nothing.
             return;
         }
+        if (isTouchPrimary) {
+            // Touch-primary device: let the browser handle scroll natively.
+            // Still emit scrollProgress so dependent hooks (Navbar, Footer,
+            // ThemeContext) keep receiving updates without any code changes.
+            const handleNativeScroll = () => {
+                const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+                setScrollProgress(maxScroll > 0 ? window.scrollY / maxScroll : 0);
+            };
+            window.addEventListener("scroll", handleNativeScroll, { passive: true });
+            return () => window.removeEventListener("scroll", handleNativeScroll);
+        }
+        // Desktop: spring-physics scroll via wheel events.
         const contentEl = contentRef.current;
         const spacerEl = spacerRef.current;
         if (!contentEl || !spacerEl)
@@ -81,7 +99,12 @@ export function SmoothScrollProvider({ children, fixedContent, sensitivity = DEF
             driver.stop();
             resizeObserver.disconnect();
         };
-    }, []);
+    }, [isTouchPrimary]);
+    // Mobile: children in normal document flow — no position:fixed wrapper, no spacer.
+    // fixedContent (Navbar) is already position:fixed via CSS; no special container needed.
+    if (isTouchPrimary) {
+        return (_jsxs(SmoothScrollContext.Provider, { value: { scrollProgress, isProvided: true }, children: [children, fixedContent] }));
+    }
     return (_jsxs(SmoothScrollContext.Provider, { value: { scrollProgress, isProvided: true }, children: [_jsx("div", { ref: contentRef, style: {
                     position: "fixed",
                     top: 0,
