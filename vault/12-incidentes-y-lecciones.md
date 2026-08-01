@@ -35,3 +35,49 @@ Estado actual: `prepare` fue corregido para emitir un echo en lugar de ejecutar 
 - **`prepare` no debe compilar en librerías con dist pre-compilado.** Si `dist/` se commitea al repositorio y los consumidores lo reciben vía git, el script `prepare` no debe apuntar a un build step que dependa de archivos fuera del campo `files`. Cualquier dependencia de compilación ausente del campo `files` va a fallar en instalación limpia.
 
 - **Antes de auditar el consumidor, verificar el proveedor.** Cuando un bug persiste después de una corrección reportada como exitosa, el primer paso es confirmar que el cambio efectivamente llegó al remoto (`git log origin/main`) y que el artefacto compilado lo refleja (`grep` sobre `dist/`), antes de seguir auditando el proyecto consumidor.
+
+---
+
+## 2026-07-31 — Hydration mismatch por detección de touch en useState lazy initializer
+
+### Contexto del incidente
+
+Se implementó soporte de scroll táctil en `SmoothScrollProvider`. La solución detectaba dispositivos touch via `window.matchMedia("(pointer: coarse)").matches` dentro de un `useState` lazy initializer, y usaba ese valor para decidir qué árbol de JSX devolver: un `Fragment` (mobile, flujo normal) vs. un `div position:fixed` (desktop, spring physics).
+
+En dispositivos touch reales, Astro reportó el error:
+
+```
+Uncaught Error: Hydration failed because the server rendered HTML didn't match the client.
+<AppShell> → <SmoothScrollProvider>
++  <astro-slot />
+-  <div style={{ position:"fixed", top:"0px", ... }}>
+```
+
+### Causa raíz
+
+El `useState` lazy initializer corre durante la primera render — tanto en el servidor (SSR de Astro) como en el cliente. En el servidor, `typeof window !== "undefined"` es `false`, por lo que `isTouchPrimary = false` y el servidor renderiza el árbol desktop (`div position:fixed`). En el cliente, en cualquier dispositivo touch, `matchMedia("(pointer: coarse)").matches` es `true`, por lo que el cliente hidrara con `isTouchPrimary = true` y devuelve el árbol mobile (`Fragment`). Árboles estructuralmente distintos → hydration mismatch garantizado en todo dispositivo touch — no un caso edge, sino el comportamiento sistemático de la lógica.
+
+### Corrección
+
+`useState(false)` como valor inicial (SSR-safe, siempre `false` en primera render). La detección real se hace en un `useEffect` separado con deps vacías, que solo corre en el cliente post-hydration:
+
+```tsx
+const [isTouchPrimary, setIsTouchPrimary] = useState(false);   // SSR-safe
+
+useEffect(() => {
+  setIsTouchPrimary(window.matchMedia("(pointer: coarse)").matches);
+}, []);
+```
+
+Secuencia: servidor renderiza `false` → árbol desktop. Cliente hidrata con `false` → mismo árbol → sin mismatch. Effect dispara post-mount → `setIsTouchPrimary(true)` en touch → segundo render → árbol mobile.
+
+### Regla operativa derivada
+
+**APIs de browser que deciden la estructura del árbol JSX son un riesgo de hydration mismatch.** La distinción crítica es:
+
+- **Seguro:** APIs de browser que cambian *comportamiento interno* (listeners, efectos, CSS classes) — pueden evaluarse en effects post-mount sin afectar la estructura del árbol.
+- **Riesgo:** APIs de browser (`window`, `matchMedia`, `localStorage`, `navigator`) que deciden *qué elementos existen* en el árbol (presencia/ausencia de elementos, cambio de tag, ramas condicionales en el return del componente) — si se evalúan en el primer render, producen árboles distintos entre servidor y cliente.
+
+El patrón correcto para el segundo caso es siempre: inicializar el estado con el valor SSR-safe (`false`, `null`, valor default), y actualizar en `useEffect(() => { /* detectar */ }, [])` para que el árbol del primer render sea idéntico en servidor y cliente.
+
+`useReducedMotion` en el mismo paquete tiene el mismo patrón (`useState(getReducedMotionPreference)` como lazy initializer), pero solo afecta class names — no estructura del árbol. No causa error de hydration, pero puede producir warning en consola si el usuario tiene `prefers-reduced-motion: reduce` activo. Riesgo latente bajo, documentado.
